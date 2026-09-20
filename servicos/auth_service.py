@@ -16,10 +16,24 @@ except:
 supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignore
 
 
-def registrar_usuario(usuario:Usuario) -> AuthResponse | None:
+def registrar_usuario(email:str,senha:str,username:str,data_nascimento:date,telefone:str,tipo:str,categoria:str|None,cidade:str,descricao:str|None,avaliacao:float) -> AuthResponse | None:
     """
     Registra um usuario no banco de dados caso não exista, se existir exibi um erro e retorna None
     """
+
+    usuario = Usuario()
+
+    usuario.email = email
+    usuario.senha = senha
+    usuario.username = username
+    usuario.data_nascimento = data_nascimento
+    usuario.telefone = telefone
+    usuario.tipo = tipo 
+    usuario.categoria = categoria
+    usuario.cidade = cidade
+    usuario.descricao = descricao
+    usuario.avaliacao = avaliacao
+
     global supabase_client
     try:
         response:AuthResponse | None = supabase_client.auth.sign_up(
@@ -33,7 +47,13 @@ def registrar_usuario(usuario:Usuario) -> AuthResponse | None:
                 "email":usuario.email,
                 "data_nascimento":usuario.data_nascimento.isoformat(),
                 "username":usuario.username,
-                "telefone":usuario.telefone
+                "telefone":usuario.telefone,
+                "tipo":usuario.tipo,
+                "categoria":categoria,
+                "cidade":cidade,
+                "descricao":descricao,
+                "avaliacao":avaliacao
+
             }).execute()
     except AuthApiError as e:
         print("ERRO: não Foi possivel cadastrar o usuario no banco de dados")
@@ -51,11 +71,9 @@ def logar_usuario(email:str,senha:str) -> Usuario | None:
             "email":email,
             "password":senha
         })
-    payload = supabase_client.table("profiles").select("*").eq("id",response.user.id).execute()
+    payload = supabase_client.table("profiles").select("*").eq("id",response.user.id).execute() # type: ignore
     payload = payload.data[0]
-    usuario = Usuario(**payload,senha=None)
+    usuario = Usuario(**payload,senha=None) # type: ignore
     if not response.user:
         return None
     return usuario
-
-usuario = logar_usuario("handreygama.profissional@gmail.com","batata123")
