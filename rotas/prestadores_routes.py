@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from auth.middleware import login_obrigatorio
 
 prestadores_bp = Blueprint('prestadores', __name__)
 
@@ -48,8 +49,14 @@ def get_prestador(id):
 
 
 @prestadores_bp.route('/prestadores/<int:id>', methods=['PUT'])
+@login_obrigatorio
 def put_prestador(id):
-    # TODO: checar token (auth/middleware.py) e se usuario_logado.id == id, senão 403
+    usuario = request.usuario_atual
+
+    if usuario.id != str(id):
+        return jsonify({"erro": "Você não tem permissão para editar este perfil"}), 403
+
+    
     dados = request.json
     resultado = atualizar_prestador(id, dados)
     return jsonify(resultado), 200
