@@ -16,7 +16,7 @@ except:
 supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignore
 
 
-def registrar_usuario(email:str,senha:str,username:str,data_nascimento:date,telefone:str,tipo:str,categoria:str|None,cidade:str,descricao:str|None,avaliacao:float) -> AuthResponse | None:
+def registrar_usuario(email:str,senha:str,username:str,data_nascimento:str,telefone:str,tipo:str,categoria:str|None,cidade:str,descricao:str|None,avaliacao:float) -> Usuario | None:
     """
     Registra um usuario no banco de dados caso não exista, se existir exibi um erro e retorna None
     """
@@ -26,7 +26,7 @@ def registrar_usuario(email:str,senha:str,username:str,data_nascimento:date,tele
     usuario.email = email
     usuario.senha = senha
     usuario.username = username
-    usuario.data_nascimento = data_nascimento
+    usuario.data_nascimento = date.fromisoformat(data_nascimento)
     usuario.telefone = telefone
     usuario.tipo = tipo 
     usuario.categoria = categoria
@@ -56,10 +56,8 @@ def registrar_usuario(email:str,senha:str,username:str,data_nascimento:date,tele
 
             }).execute()
     except AuthApiError as e:
-        print("ERRO: não Foi possivel cadastrar o usuario no banco de dados")
-    finally:
-        response = None    
-    return response
+        print(f"ERRO: não Foi possivel cadastrar o usuario no banco de dados:{e}")      
+    return usuario
 
 def logar_usuario(email:str,senha:str) -> Usuario | None:
     """
