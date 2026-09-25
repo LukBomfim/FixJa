@@ -26,7 +26,10 @@ def registrar_usuario(email:str,senha:str,username:str,data_nascimento:str,telef
     usuario.email = email
     usuario.senha = senha
     usuario.username = username
-    usuario.data_nascimento = date.fromisoformat(data_nascimento)
+    if data_nascimento and isinstance(data_nascimento, str):
+        usuario.data_nascimento = date.fromisoformat(data_nascimento)
+    else:
+        usuario.data_nascimento = None
     usuario.telefone = telefone
     usuario.tipo = tipo 
     usuario.categoria = categoria
