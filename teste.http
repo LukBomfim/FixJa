@@ -1,0 +1,27 @@
+POST http://127.0.0.1:5000/register/profile HTTP/1.1
+Content-Type: application/json
+
+{
+    "usuario":
+        {
+            "avaliacao": 0.0,
+            "categoria": "",
+            "cidade": "",
+            "data_nascimento": "Mon, 01 Jan 1990 00:00:00 GMT",
+            "descricao": "",
+            "email": "comedordesalsicha123@gmail.com",
+            "id": "53bddd91-0c38-4fe3-8aa5-c7bde9973a7a",
+            "senha": "123456",
+            "telefone": "",
+            "tipo": "",
+            "username": "comedordesalsicha"
+        },
+    "avaliacao": 5.0,
+    "categoria": "ENCANADOR",
+    "cidade": "MACEIO",
+    "data_nascimento": "2006-09-13",
+    "descricao": "eba",
+    "email": "comedordesalsicha123@gmail.com",
+    "telefone": "8293123542",
+    "tipo": "PRESTADOR"       
+}

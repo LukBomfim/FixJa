@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from servicos.auth_service import logar_usuario, registrar_usuario
+from modelos.modelos import Usuario
+from servicos.auth_service import logar_usuario, registrar_usuario,criar_perfil
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -27,8 +28,24 @@ def registrar():
         email = dados['email']
         senha = dados['senha']
         username = dados['username']
-        tipo = dados['tipo']
 
+        user = registrar_usuario(
+            email,
+            senha,
+            username,
+        )
+        return jsonify(user.__dict__), 201
+    except KeyError as e:
+        return jsonify({"erro": f"O campo {str(e)} é obrigatório!"}), 400
+
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 400 
+@auth_bp.route('/register/profile', methods=['POST'])
+def registrar_perfil():
+    try:
+        dados = request.get_json() or {}
+        tipo = dados['tipo']
+        usuario = Usuario(**dados['usuario'])
         data_nascimento = dados.get('data_nascimento')
         telefone = dados.get('telefone')
         categoria = dados.get('categoria')
@@ -36,10 +53,8 @@ def registrar():
         descricao = dados.get('descricao')
         avaliacao = 0.0
 
-        user = registrar_usuario(
-            email,
-            senha,
-            username,
+        user = criar_perfil(
+            usuario,
             data_nascimento,
             telefone,
             tipo,
@@ -49,9 +64,8 @@ def registrar():
             avaliacao
         )
         return jsonify(user.__dict__), 201
-
     except KeyError as e:
         return jsonify({"erro": f"O campo {str(e)} é obrigatório!"}), 400
 
     except Exception as e:
-        return jsonify({"erro": str(e)}), 40
+        return jsonify({"erro": str(e)}), 400
