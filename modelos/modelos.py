@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
+from typing import Any
 
 @dataclass
 class Usuario:
@@ -17,10 +18,12 @@ class Usuario:
 
 @dataclass
 class Contratacao:
-    id:str|None=None
-    client_id:str=""
-    prestador_id:str=""
-    created_at:date|None=None
-    data_solicitada:str|None=None
-    descricao:str=""
-    status:str=""
+    def __init__(self,id,client_id,prestador_id,created_at,data,data_solicitada,descricao,status) -> None:
+        self.id:str|None=id
+        self.client_id:str=client_id
+        self.prestador_id:str=prestador_id
+        self.created_at:date|None=created_at
+        self.data_solicitada:datetime=datetime.fromisoformat(data_solicitada)
+        self.data:date|None=self.data_solicitada.date()
+        self.descricao:str=descricao
+        self.status:str=status

@@ -1,29 +1,8 @@
 from flask import Blueprint, request, jsonify
 from auth.middleware import login_obrigatorio
+from servicos.contratacoes_service import buscar_contratacao_por_id_db, criar_contratacao_db
 
 contratacoes_bp = Blueprint('contratacoes', __name__)
-
-# FUNÇÕES FAKE TIRAR DEPOIS
-def criar_contratacao(cliente_id, prestador_id, descricao, data_solicitada):
-    return {
-        "id": 10, "cliente_id": cliente_id, "prestador_id": prestador_id,
-        "descricao": descricao, "data_solicitada": data_solicitada, "status": "pendente"
-    }
-
-def buscar_contratacao(id):
-    return {
-        "id": id, "cliente_id": 5, "prestador_id": 1,
-        "descricao": "Vazamento na cozinha", "data_solicitada": "2026-09-20", "status": "pendente"
-    }
-
-def atualizar_status_contratacao(id, status):
-    contratacao = buscar_contratacao(id)
-    contratacao["status"] = status
-    return contratacao
-
-
-
-
 
 
 
@@ -37,7 +16,7 @@ def post_contratacao():
         cliente_id=usuario.id,
         prestador_id=dados.get('prestador_id'),
         descricao=dados.get('descricao'),
-        data_solicitada=dados.get('data_solicitada')
+        data_solicitada_com_horario=dados.get('data_solicitada')
     )
     return jsonify(resultado), 201
 
@@ -46,7 +25,7 @@ def post_contratacao():
 @login_obrigatorio
 def get_contratacao(id):
     usuario = request.usuario_atual
-    contratacao = buscar_contratacao(id)
+    contratacao = buscar_contratacao_por_id_db(id)
 
     if not contratacao:
         return jsonify({"erro": "Contratação não encontrada"}), 404
@@ -61,7 +40,7 @@ def get_contratacao(id):
 @login_obrigatorio
 def put_contratacao(id):
     usuario = request.usuario_atual
-    contratacao = buscar_contratacao(id)
+    contratacao = buscar_contratacao_por_id_db(id)
 
     if not contratacao:
         return jsonify({"erro": "Contratação não encontrada"}), 404

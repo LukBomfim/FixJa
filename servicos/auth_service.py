@@ -2,7 +2,7 @@ from supabase import AuthApiError, Client, create_client
 from supabase_auth import AuthResponse
 from dotenv import load_dotenv
 from os import getenv
-from datetime import date
+from datetime import datetime
 from modelos.modelos import Usuario
 
 load_dotenv()
@@ -48,9 +48,9 @@ def criar_perfil(user:Usuario,data_nascimento:str,telefone:str,tipo:str,categori
     usuario.descricao = descricao
     usuario.avaliacao = avaliacao
     if data_nascimento and isinstance(data_nascimento, str):
-        usuario.data_nascimento = date.fromisoformat(data_nascimento)
+        usuario.data_nascimento = datetime.fromisoformat(data_nascimento)
     else:
-        usuario.data_nascimento = date(1990,1,1)
+        usuario.data_nascimento = datetime(1990,1,1)
     try:    
         supabase_client.table("profiles").insert({
             "id":usuario.id, # type: ignore
