@@ -1,26 +1,46 @@
-/* Layout Principal da Página */
-.pageWrapper {
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* Coluna da Esquerda: Formulário */
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+
+.pageWrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .formSection {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2.5rem 1.5rem;
+  padding: 2rem;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .formContainer {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   background: #ffffff;
-  padding: 2.5rem;
+  padding: 2.25rem;
   border-radius: 16px;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 
               0 8px 10px -6px rgba(15, 23, 42, 0.04);
@@ -29,78 +49,78 @@
 
 .brandHeader {
   margin-bottom: 1.25rem;
+  text-align: center;
 }
 
 .logoBadge {
-  font-size: 1.5rem;
+  display: inline-block;
+  font-size: 2rem;
   font-weight: 800;
   color: #2563eb;
   letter-spacing: -0.5px;
 }
 
 .welcomeText {
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
 }
 
 .title {
-  font-size: 1.85rem;
+  font-size: 1.65rem;
   font-weight: 700;
   color: #0f172a;
-  letter-spacing: -0.02em;
 }
 
 .subtitle {
   color: #64748b;
-  font-size: 0.925rem;
-  margin-top: 0.35rem;
-  line-height: 1.4;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-/* Formulário e Inputs */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 0.85rem;
 }
 
 .inputField {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .label {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #1e293b;
 }
 
 .input {
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 0.9rem;
   border: 1.5px solid #cbd5e1;
   border-radius: 10px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #0f172a;
   background-color: #f8fafc;
   outline: none;
+  box-sizing: border-box;
   transition: all 0.2s ease-in-out;
 }
 
 .input:focus {
   border-color: #2563eb;
   background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-/* Caixa do Tipo de Conta */
 .accountTypeBox {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   background-color: #f8fafc;
-  padding: 1rem;
-  border-radius: 12px;
+  padding: 0.75rem;
+  border-radius: 10px;
   border: 1px dashed #cbd5e1;
 }
 
@@ -117,58 +137,50 @@
 
 .typeBtn {
   flex: 1;
-  padding: 0.65rem;
+  padding: 0.55rem;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: #ffffff;
   color: #475569;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .typeBtnActive {
   background-color: #2563eb;
   color: #ffffff;
   border-color: #2563eb;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
-/* Botão Submeter */
 .submitBtn {
   width: 100%;
   background-color: #2563eb;
   color: #ffffff;
-  padding: 0.9rem;
+  padding: 0.85rem;
   border: none;
   border-radius: 10px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .submitBtn:hover {
   background-color: #1d4ed8;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
 .submitBtn:disabled {
   background-color: #94a3b8;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Rodapé */
 .footer {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: #64748b;
 }
 
@@ -186,58 +198,31 @@
   text-decoration: underline;
 }
 
-/* Coluna da Direita: Banner Visual Encorpado */
 .bannerSection {
-  flex: 1.2;
-  background-image: url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop');
-  background-size: cover;
-  background-position: center;
+  flex: 1;
+  height: 100%;
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  padding: 3rem;
+  overflow: hidden;
 }
 
-/* Overlay Escuro com Gradiente para Dar Leitura */
+.bannerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .bannerOverlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.85) 100%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.6) 100%);
 }
 
-/* Card Flutuante de Destaque no Banner */
-.bannerCard {
-  position: relative;
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 2rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  max-width: 480px;
-}
-
-.bannerCard h3 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 0.5rem;
-}
-
-.bannerCard p {
-  font-size: 0.95rem;
-  color: #e2e8f0;
-  line-height: 1.5;
-}
-
-/* Responsividade (Telas menores) */
 @media (max-width: 900px) {
   .bannerSection {
-    display: none; /* Em celulares/tablets esconde a foto e foca no cadastro */
+    display: none;
   }
 }

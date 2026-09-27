@@ -169,9 +169,12 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
       </div>
 
       <div className={styles.bannerSection}>
-        <div className={styles.bannerOverlay}>
-
-        </div>
+        <img 
+          src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=1200&auto=format&fit=crop" 
+          alt="Trabalhador de Serviços FixJá" 
+          className={styles.bannerImage}
+        />
+        <div className={styles.bannerOverlay} />
       </div>
     </div>
   );

@@ -87,10 +87,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
         </div>
       </div>
 
-      {/* Lado Direito */}
       <div className={styles.bannerSection}>
         <img 
-          src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop" 
+          src="https://img.magnific.com/fotos-gratis/trabalhador-masculino-numa-fabrica_1303-14306.jpg" 
           alt="Serviços FixJá" 
           className={styles.bannerImage}
         />
