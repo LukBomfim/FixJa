@@ -11,6 +11,14 @@ const SERVICE_OPTIONS = [
   'Jardineiro', 'Limpeza/Diarista', 'Cabeleireira/Barbeiro', 'Chaveiro', 'Outro'
 ];
 
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  selectedService?: string;
+  general?: string;
+}
+
 const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogin }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,14 +27,40 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
   const [selectedService, setSelectedService] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
+
+  // erros por campo específico
+  const [errors, setErrors] = useState<FormErrors>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: FormErrors = {};
+
+    if (!name.trim()) {
+      newErrors.name = 'Preencha seu nome completo.';
+    }
+
+    if (!email.trim()) {
+      newErrors.email = 'Preencha o e-mail.';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'E-mail em formato inválido.';
+    }
+
+    if (!password) {
+      newErrors.password = 'Preencha a senha.';
+    } else if (password.length < 6) {
+      newErrors.password = 'A senha deve ter pelo menos 6 caracteres.';
+    }
 
     if (isProvider && !selectedService) {
-      alert('Por favor, selecione a sua área de atuação!');
+      newErrors.selectedService = 'Selecione uma área de atuação.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    setErrors({});
     setLoading(true);
 
     const payload = {
@@ -41,12 +75,11 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
       console.log('Enviando dados do Cadastro:', payload);
       setTimeout(() => {
         setLoading(false);
-        alert('Conta criada com sucesso!');
         if (onRegisterSuccess) onRegisterSuccess();
       }, 1200);
     } catch (error) {
       setLoading(false);
-      alert('Erro ao realizar cadastro.');
+      setErrors({ general: 'Erro ao realizar cadastro. Tente novamente.' });
     }
   };
 
@@ -65,47 +98,59 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form} noValidate>
+            {/* Nome */}
             <div className={styles.inputField}>
               <label htmlFor="name" className={styles.label}>Nome Completo</label>
               <input
                 id="name"
                 type="text"
-                required
                 placeholder="Ex: Maria Silva"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={styles.input}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+                }}
+                className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
               />
+              {errors.name && <span className={styles.errorMessage}>⚠️ {errors.name}</span>}
             </div>
 
+            {/* E-mail */}
             <div className={styles.inputField}>
               <label htmlFor="reg-email" className={styles.label}>E-mail</label>
               <input
                 id="reg-email"
                 type="email"
-                required
                 placeholder="nome@exemplo.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles.input}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
               />
+              {errors.email && <span className={styles.errorMessage}>⚠️ {errors.email}</span>}
             </div>
 
+            {/* Senha */}
             <div className={styles.inputField}>
               <label htmlFor="reg-password" className={styles.label}>Senha</label>
               <input
                 id="reg-password"
                 type="password"
-                required
                 placeholder="Mínimo 6 caracteres"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={styles.input}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
+                className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
               />
+              {errors.password && <span className={styles.errorMessage}>⚠️ {errors.password}</span>}
             </div>
 
-            {/* Seleção do Tipo de Conta */}
+            {/* Tipo de Conta */}
             <div className={styles.accountTypeBox}>
               <label className={styles.accountTypeLabel}>Tipo de Conta</label>
               <div className={styles.typeSelector}>
@@ -126,6 +171,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
               </div>
             </div>
 
+            {/* Serviços */}
             {isProvider && (
               <div className={styles.inputField}>
                 <label htmlFor="service-select" className={styles.label}>
@@ -134,9 +180,11 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                 <select
                   id="service-select"
                   value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                  className={styles.input}
-                  required={isProvider}
+                  onChange={(e) => {
+                    setSelectedService(e.target.value);
+                    if (errors.selectedService) setErrors((prev) => ({ ...prev, selectedService: undefined }));
+                  }}
+                  className={`${styles.input} ${errors.selectedService ? styles.inputError : ''}`}
                 >
                   <option value="" disabled>
                     -- Selecione um serviço --
@@ -147,8 +195,13 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                     </option>
                   ))}
                 </select>
+                {errors.selectedService && (
+                  <span className={styles.errorMessage}>⚠️ {errors.selectedService}</span>
+                )}
               </div>
             )}
+
+            {errors.general && <span className={styles.errorMessage}>⚠️ {errors.general}</span>}
 
             <button type="submit" disabled={loading} className={styles.submitBtn}>
               {loading ? 'Cadastrando...' : 'Finalizar Cadastro'}

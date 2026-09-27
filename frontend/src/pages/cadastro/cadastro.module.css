@@ -1,4 +1,3 @@
-/* Paleta de Cores & Design Tokens do FixJá */
 :root {
   --primary-blue: #122c64;
   --primary-blue-hover: #193b9b;
@@ -233,8 +232,41 @@ html, body {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.6) 100%);
 }
 
+/* mensagem de erro*/
+.errorMessage {
+  font-size: 0.78rem;
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.inputError {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.inputError:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 900px) {
   .bannerSection {
     display: none;
   }
 }
+
