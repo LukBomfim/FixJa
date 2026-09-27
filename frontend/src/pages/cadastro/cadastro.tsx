@@ -8,7 +8,7 @@ interface RegisterProps {
 
 const SERVICE_OPTIONS = [
   'Encanador', 'Eletricista', 'Pintor', 'Marceneiro', 'Mecânico',
-  'Jardineiro', 'Limpeza/Diarista', 'Cabeleireira/Barbeiro', 'Chaveiro'
+  'Jardineiro', 'Limpeza/Diarista', 'Cabeleireira/Barbeiro', 'Chaveiro', 'Outro'
 ];
 
 const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogin }) => {

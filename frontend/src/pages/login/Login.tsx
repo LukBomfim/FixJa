@@ -33,7 +33,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
           <div className={styles.welcomeText}>
             <h1 className={styles.title}>Acesse sua conta</h1>
             <p className={styles.subtitle}>
-              Bem-vindo de volta! Digite seus dados para entrar.
+              Bem-vindo de volta!
             </p>
           </div>
 
@@ -81,7 +81,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
               onClick={onNavigateToRegister} 
               className={styles.switchBtnLink}
             >
-              Cadastre-se grátis
+              Cadastre-se
             </button>
           </div>
         </div>
