@@ -1,10 +1,11 @@
-function App() {
+import Login from './pages/Login';
+
+export function App() {
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>FixJá</h1>
-      <p> teste funcionando </p>
+    <div>
+      <Login />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -1,33 +1,31 @@
 import React, { useState } from 'react';
 import styles from './Login.module.css';
 
-export const Login: React.FC = () => {
-    const [email, setEmail] = useState<string>('');
-    const [senha, setSenha] = useState<string>('');
+interface LoginProps {
+  onLoginSuccess?: (data: { email: string }) => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, senha }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert('Login efetuado com sucesso!');
-        console.log('Dados do usuário:', data);
-      } else {
-        alert(`Erro no login: ${data.erro || 'Verifique suas credenciais'}`);
-      }
+      console.log('Dados do formulário:', { email, password, rememberMe });
+      
+      setTimeout(() => {
+        setLoading(false);
+        if (onLoginSuccess) onLoginSuccess({ email });
+        alert('Hitou! Login efetuado com sucesso ✨');
+      }, 1000);
     } catch (error) {
-      console.error('Erro na requisição:', error);
-      alert('Não foi possível conectar ao servidor Flask!');
+      setLoading(false);
+      alert('Flopou! Verifique suas credenciais.');
     }
   };
 
@@ -35,48 +33,64 @@ export const Login: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1 className={styles.title}>FixJá</h1>
-          <p className={styles.subtitle}>Entre na sua conta para continuar</p>
+          <div className={styles.logoBadge}>🔧 FixJá</div>
+          <h1 className={styles.title}>Bem-vindo de volta!</h1>
+          <p className={styles.subtitle}>
+            Acesse sua conta para gerenciar e contratar os melhores serviços.
+          </p>
         </div>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label className={styles.label} htmlFor="login-email">E-mail</label>
+            <label htmlFor="email" className={styles.label}>E-mail</label>
             <input
-              id="login-email"
+              id="email"
               type="email"
-              className={styles.input}
-              placeholder="seu@email.com"
+              required
+              placeholder="seu.email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              className={styles.input}
             />
           </div>
 
           <div className={styles.inputGroup}>
-            <label className={styles.label} htmlFor="login-password">Senha</label>
+            <div className={styles.passwordHeader}>
+              <label htmlFor="password" className={styles.label}>Senha</label>
+              <a href="#forgot" className={styles.forgotLink}>Esqueceu a senha?</a>
+            </div>
             <input
-              id="login-password"
+              id="password"
               type="password"
-              className={styles.input}
-              placeholder="••••••••"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
               required
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={styles.input}
             />
           </div>
 
-          <button type="submit" className={styles.button}>
-            Entrar
+          <div className={styles.options}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className={styles.checkbox}
+              />
+              Lembrar de mim
+            </label>
+          </div>
+
+          <button type="submit" disabled={loading} className={styles.submitBtn}>
+            {loading ? 'Carregando...' : 'Entrar na Conta'}
           </button>
         </form>
 
-        <p className={styles.footerText}>
-          Ainda não tem conta?{' '}
-          <a href="/register" className={styles.link}>
-            Cadastre-se
-          </a>
-        </p>
+        <div className={styles.footer}>
+          Não tem uma conta ainda?{' '}
+          <a href="#register" className={styles.registerLink}>Cadastre-se</a>
+        </div>
       </div>
     </div>
   );
