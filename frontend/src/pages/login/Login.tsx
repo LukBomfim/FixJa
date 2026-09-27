@@ -1,37 +1,29 @@
 import React, { useState } from 'react';
-import styles from './Login.module.css';
+import styles from './login.module.css';
 
 interface LoginProps {
-  onLoginSuccess?: (data: { email: string }) => void;
+  onLoginSuccess?: () => void;
   onNavigateToRegister?: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    try {
-      console.log('Dados do Login:', { email, password, rememberMe });
-      setTimeout(() => {
-        setLoading(false);
-        if (onLoginSuccess) onLoginSuccess({ email });
-        alert('Login efetuado com sucesso');
-      }, 1000);
-    } catch (error) {
+    
+    // Simulação de Login
+    setTimeout(() => {
       setLoading(false);
-      alert('Verifique suas credenciais.');
-    }
+      if (onLoginSuccess) onLoginSuccess();
+    }, 1000);
   };
 
   return (
     <div className={styles.pageWrapper}>
-      { }
       <div className={styles.formSection}>
         <div className={styles.formContainer}>
           <div className={styles.brandHeader}>
@@ -41,15 +33,15 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
           <div className={styles.welcomeText}>
             <h1 className={styles.title}>Acesse sua conta</h1>
             <p className={styles.subtitle}>
-              Bem-vindo de volta!
+              Bem-vindo de volta! Digite seus dados para entrar.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.inputField}>
-              <label htmlFor="email" className={styles.label}>E-mail</label>
+              <label htmlFor="login-email" className={styles.label}>E-mail</label>
               <input
-                id="email"
+                id="login-email"
                 type="email"
                 required
                 placeholder="nome@exemplo.com"
@@ -60,12 +52,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
             </div>
 
             <div className={styles.inputField}>
-              <div className={styles.labelRow}>
-                <label htmlFor="password" className={styles.label}>Senha</label>
-                <a href="#forgot" className={styles.forgotLink}>Esqueceu a senha?</a>
+              <div className={styles.labelWithLink}>
+                <label htmlFor="login-password" className={styles.label}>Senha</label>
+                <button type="button" className={styles.forgotLink}>
+                  Esqueceu a senha?
+                </button>
               </div>
               <input
-                id="password"
+                id="login-password"
                 type="password"
                 required
                 placeholder="••••••••"
@@ -81,25 +75,27 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
           </form>
 
           <div className={styles.footer}>
-            <span>Ainda não tem uma conta?</span>{' '}
+            <span>Ainda não tem uma conta?</span>
             <button 
               type="button" 
               onClick={onNavigateToRegister} 
-              className={styles.signupBtnLink}
+              className={styles.switchBtnLink}
             >
-              Cadastre-se
+              Cadastre-se grátis
             </button>
           </div>
         </div>
       </div>
 
-      { }
+      {/* Lado Direito */}
       <div className={styles.bannerSection}>
-        <div className={styles.bannerOverlay}>
-          <div className={styles.bannerCard}>
-            <h3>Encontre soluções rápidas e profissionais para o seu lar.</h3>
-          </div>
-        </div>
+        <img 
+          src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop" 
+          alt="Serviços FixJá" 
+          className={styles.bannerImage}
+        />
+        <div className={styles.bannerOverlay} />
+
       </div>
     </div>
   );

@@ -7,8 +7,8 @@ interface RegisterProps {
 }
 
 const SERVICE_OPTIONS = [
-  'Encanador', 'Eletricista', 'Pintor', 'Montador de Móveis',
-  'Jardineiro', 'Limpeza/Diarista', 'Ar Condicionado', 'Chaveiro'
+  'Encanador', 'Eletricista', 'Pintor', 'Marceneiro', 'Mecânico',
+  'Jardineiro', 'Limpeza/Diarista', 'Cabeleireira/Barbeiro', 'Chaveiro'
 ];
 
 const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogin }) => {
@@ -16,32 +16,25 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isProvider, setIsProvider] = useState(false);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedService, setSelectedService] = useState<string>('');
   const [loading, setLoading] = useState(false);
-
-  const toggleService = (service: string) => {
-    if (selectedServices.includes(service)) {
-      setSelectedServices(selectedServices.filter((s) => s !== service));
-    } else {
-      setSelectedServices([...selectedServices, service]);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isProvider && selectedServices.length === 0) {
-      alert('Por favor, selecione pelo menos um serviço prestado!');
+    if (isProvider && !selectedService) {
+      alert('Por favor, selecione a sua área de atuação!');
       return;
     }
 
     setLoading(true);
+
     const payload = {
       name,
       email,
       password,
       role: isProvider ? 'PROVIDER' : 'CLIENT',
-      services: isProvider ? selectedServices : [],
+      services: isProvider ? [selectedService] : [],
     };
 
     try {
@@ -62,7 +55,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
       <div className={styles.formSection}>
         <div className={styles.formContainer}>
           <div className={styles.brandHeader}>
-            <span className={styles.logoBadge}>🔧 FixJá</span>
+            <span className={styles.logoBadge}>FixJá</span>
           </div>
 
           <div className={styles.welcomeText}>
@@ -112,7 +105,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
               />
             </div>
 
-            {/* seleção do tipo de conta */}
+            {/* Seleção do Tipo de Conta */}
             <div className={styles.accountTypeBox}>
               <label className={styles.accountTypeLabel}>Tipo de Conta</label>
               <div className={styles.typeSelector}>
@@ -133,27 +126,27 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
               </div>
             </div>
 
-            {/* aparece apenas se for Prestador */}
             {isProvider && (
-              <div className={styles.servicesContainer}>
-                <label className={styles.label}>
-                  Selecione seus serviços (Conta Profissional):
+              <div className={styles.inputField}>
+                <label htmlFor="service-select" className={styles.label}>
+                  Área Principal de Atuação:
                 </label>
-                <div className={styles.servicesGrid}>
-                  {SERVICE_OPTIONS.map((service) => {
-                    const isSelected = selectedServices.includes(service);
-                    return (
-                      <button
-                        type="button"
-                        key={service}
-                        onClick={() => toggleService(service)}
-                        className={`${styles.serviceTag} ${isSelected ? styles.serviceTagActive : ''}`}
-                      >
-                        {service} {isSelected ? '✓' : '+'}
-                      </button>
-                    );
-                  })}
-                </div>
+                <select
+                  id="service-select"
+                  value={selectedService}
+                  onChange={(e) => setSelectedService(e.target.value)}
+                  className={styles.input}
+                  required={isProvider}
+                >
+                  <option value="" disabled>
+                    -- Selecione um serviço --
+                  </option>
+                  {SERVICE_OPTIONS.map((service) => (
+                    <option key={service} value={service}>
+                      {service}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -175,13 +168,9 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
         </div>
       </div>
 
-      {/* banner direito */}
       <div className={styles.bannerSection}>
         <div className={styles.bannerOverlay}>
-          <div className={styles.bannerCard}>
-            <h3>Trabalhe conosco ou resolva seu problema.</h3>
-            <p>Milhares de profissionais qualificados prontos para te atender.</p>
-          </div>
+
         </div>
       </div>
     </div>
