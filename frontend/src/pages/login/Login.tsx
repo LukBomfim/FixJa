@@ -75,17 +75,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
               />
             </div>
 
-            <div className={styles.optionsRow}>
-              <label className={styles.checkboxContainer}>
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className={styles.checkbox}
-                />
-              </label>
-            </div>
-
             <button type="submit" disabled={loading} className={styles.submitBtn}>
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -98,7 +87,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
               onClick={onNavigateToRegister} 
               className={styles.signupBtnLink}
             >
-              Cadastre-se grátis
+              Cadastre-se
             </button>
           </div>
         </div>
