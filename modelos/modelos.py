@@ -27,9 +27,8 @@ class Contratacao:
         self.data:date|None=self.data_solicitada.date()
         self.descricao:str=descricao
         self.status:str=status
+@dataclass        
 class Categoria:
     def __init__(self,id,categoria_name) -> None:
         self.id = id
-        self.categoria_name = categoria_name
-    def __str__(self) -> str:
-        return f"Categoria(categoria_name={self.categoria_name})"            
+        self.categoria_name = categoria_name        
