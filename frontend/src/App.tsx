@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Login from './pages/login/Login';
-import Register from './pages/cadastro/cadastro';
+import Register from './pages/cadastro/Cadastro';
 import DashboardClient from './pages/dashboard/DashboardCliente';
 import DashboardPrestador from './pages/dashboardPrestador/PainelPrestador';
 

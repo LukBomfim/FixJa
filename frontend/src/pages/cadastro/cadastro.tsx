@@ -113,7 +113,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                 }}
                 className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
               />
-              {errors.name && <span className={styles.errorMessage}>⚠️ {errors.name}</span>}
+              {errors.name && <span className={styles.errorMessage}>{errors.name}</span>}
             </div>
 
             {/* E-mail */}
@@ -130,7 +130,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                 }}
                 className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
               />
-              {errors.email && <span className={styles.errorMessage}>⚠️ {errors.email}</span>}
+              {errors.email && <span className={styles.errorMessage}> {errors.email}</span>}
             </div>
 
             {/* Senha */}
@@ -147,7 +147,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                 }}
                 className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
               />
-              {errors.password && <span className={styles.errorMessage}>⚠️ {errors.password}</span>}
+              {errors.password && <span className={styles.errorMessage}> {errors.password}</span>}
             </div>
 
             {/* Tipo de Conta */}

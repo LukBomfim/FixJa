@@ -77,7 +77,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
                 }}
                 className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
               />
-              {errors.email && <span className={styles.errorMessage}>⚠️ {errors.email}</span>}
+              {errors.email && <span className={styles.errorMessage}> {errors.email}</span>}
             </div>
 
             {/* Senha */}
@@ -99,10 +99,10 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
                 }}
                 className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
               />
-              {errors.password && <span className={styles.errorMessage}>⚠️ {errors.password}</span>}
+              {errors.password && <span className={styles.errorMessage}> {errors.password}</span>}
             </div>
 
-            {errors.general && <span className={styles.errorMessage}>⚠️ {errors.general}</span>}
+            {errors.general && <span className={styles.errorMessage}> {errors.general}</span>}
 
             <button type="submit" disabled={loading} className={styles.submitBtn}>
               {loading ? 'Entrando...' : 'Entrar'}
