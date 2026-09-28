@@ -68,7 +68,8 @@ def criar_perfil(user:Usuario,data_nascimento:str,telefone:str,tipo:str,categori
         print(f"Erro ao tentar criar perfil:{e}")
         return False    
     return usuario
-def logar_usuario(email:str,senha:str) -> Usuario | None:
+
+def logar_usuario(email:str,senha:str):
     """
     Retorna uma Auth response se existir usuario e None caso não exista
     """
@@ -83,4 +84,4 @@ def logar_usuario(email:str,senha:str) -> Usuario | None:
     usuario = Usuario(**payload,senha=None) # type: ignore
     if not response.user:
         return None
-    return usuario
+    return usuario, response.session.access_token
