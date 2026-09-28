@@ -1,19 +1,8 @@
 from flask import Blueprint, request, jsonify
 from auth.middleware import login_obrigatorio
+from servicos.perfils_service import buscar_perfil_prestador
 
 prestadores_bp = Blueprint('prestadores', __name__)
-
-# FUNÇÕES FAKE PARA TESTES, TROCAR DEPOIS PELO IMPORT DE SERVICOS/prestadores_service.py
-def buscar_prestadores(categoria=None, cidade=None):
-    dados_falsos = [
-        {"id": 1, "nome": "João Silva", "categoria": "encanador", "cidade": "São Paulo", "estado":"São Paulo", "nota_media": 4.5},
-        {"id": 2, "nome": "Maria Souza", "categoria": "eletricista", "cidade": "São Paulo", "estado":"São Paulo", "nota_media": 4.8}
-    ]
-    if categoria:
-        dados_falsos = [p for p in dados_falsos if p["categoria"] == categoria]
-    if cidade:
-        dados_falsos = [p for p in dados_falsos if p["cidade"] == cidade]
-    return dados_falsos
 
 def buscar_prestador_por_id(id):
     return {
@@ -35,8 +24,7 @@ def atualizar_prestador(id, dados):
 @prestadores_bp.route('/prestadores', methods=['GET'])
 def get_prestadores():
     categoria = request.args.get('categoria')
-    cidade = request.args.get('cidade')
-    resultado = buscar_prestadores(categoria, cidade)
+    resultado = buscar_perfil_prestador(categoria)
     return jsonify(resultado), 200
 
 

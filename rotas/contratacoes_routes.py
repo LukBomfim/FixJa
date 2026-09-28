@@ -1,9 +1,8 @@
 from flask import Blueprint, request, jsonify
 from auth.middleware import login_obrigatorio
-from servicos.contratacoes_service import buscar_contratacao_por_id_db, criar_contratacao_db
+from servicos.contratacoes_service import criar_contratacao_db, buscar_contratacao_por_user_id, buscar_contratacao_por_id_db, atualizar_status_contratacao
 
 contratacoes_bp = Blueprint('contratacoes', __name__)
-
 
 
 @contratacoes_bp.route('/contratacoes', methods=['POST'])
@@ -12,13 +11,22 @@ def post_contratacao():
     usuario = request.usuario_atual
     dados = request.json
 
-    resultado = criar_contratacao(
-        cliente_id=usuario.id,
+    resultado = criar_contratacao_db(
+        client_id=usuario.id,
         prestador_id=dados.get('prestador_id'),
         descricao=dados.get('descricao'),
         data_solicitada_com_horario=dados.get('data_solicitada')
     )
     return jsonify(resultado), 201
+
+
+@contratacoes_bp.route('/contratacoes', methods=['GET'])
+@login_obrigatorio
+def get_contratacoes():
+    usuario = request.usuario_atual
+
+    resultado = buscar_contratacao_por_user_id(usuario.id, usuario.tipo)
+    return jsonify(resultado), 200
 
 
 @contratacoes_bp.route('/contratacoes/<int:id>', methods=['GET'])
