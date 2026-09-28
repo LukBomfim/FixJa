@@ -49,6 +49,3 @@ def avaliar_perfil(user_id,contratacao_id,nota,comentario):
         "comentario":comentario
     }).execute()
     return True
-
-
-avaliar_perfil("3ba1adeb-3bfd-420f-b9e7-f8cd95f86084","6b97b210-fb5e-447e-8438-d8a8b6dc5d61",5,"muito foda")
