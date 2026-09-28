@@ -49,7 +49,7 @@ def get_contratacao(id):
 def put_contratacao(id):
     usuario = request.usuario_atual
     contratacao = buscar_contratacao_por_id_db(id)
-
+    
     if not contratacao:
         return jsonify({"erro": "Contratação não encontrada"}), 404
 

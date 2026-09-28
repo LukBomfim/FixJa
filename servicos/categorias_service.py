@@ -23,5 +23,3 @@ def buscar_todas_categorias():
     data = response.data
     categorias = [Categoria(**d) for d in data]
     return categorias
-
-print(buscar_todas_categorias())

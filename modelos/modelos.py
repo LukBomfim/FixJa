@@ -29,6 +29,5 @@ class Contratacao:
         self.status:str=status
 @dataclass        
 class Categoria:
-    def __init__(self,id,categoria_name) -> None:
-        self.id = id
-        self.categoria_name = categoria_name        
+    id:str
+    categoria_name:str     
