@@ -1,9 +1,10 @@
+from postgrest import APIResponse
 from supabase import AuthApiError, Client, create_client
 from supabase_auth import AuthResponse
 from dotenv import load_dotenv
 from os import getenv
-from datetime import datetime
-from modelos.modelos import Usuario
+from datetime import datetime,date
+from modelos.modelos import Categoria
 
 load_dotenv()
 
@@ -16,14 +17,9 @@ except:
 supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignore
 
 
-def buscar_perfil_por_categoria(categoria=None,tamanho=10):
+def buscar_todas_categorias():
     global supabase_client
-    if categoria != None:
-        response = supabase_client.table("profiles").select("*").eq("categoria",categoria).limit(tamanho).execute()
-    else:
-        response = supabase_client.table("profiles").select("*").eq("tipo","PRESTADOR").limit(tamanho).execute()    
+    response = supabase_client.table("categorias").select("*").execute()
     data = response.data
-    usuarios = [ Usuario(**d) for d in data]
-    return usuarios    
-
-print(buscar_perfil_por_categoria(categoria="ELETRICISTA"))
+    categorias = [Categoria(**d).__dict__ for d in data]
+    return categorias

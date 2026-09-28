@@ -46,19 +46,27 @@ def buscar_contratacao_por_id_db(id):
     contratacao = Contratacao(**data) # type: ignore
     return contratacao
 
+      
 def buscar_contratacao_por_client_id(id):
     global supabase_client
     response = supabase_client.table("contratacoes").select("*").eq("client_id",id).execute()
-    data = response.data[0]    
-    contratacao = Contratacao(**data) # type: ignore
+    data = response.data    
+    contratacao = [Contratacao(**d) for d in data] # type: ignore
     return contratacao
 
 def buscar_contratacao_por_prestador_id(id):
     global supabase_client
     response = supabase_client.table("contratacoes").select("*").eq("prestador_id",id).execute()
-    data = response.data[0]    
-    contratacao = Contratacao(**data) # type: ignore
+    data = response.data   
+    contratacao = [Contratacao(**d) for d in data] # type: ignore
     return contratacao
+
+def buscar_contratacao_por_user_id(id,tipo):
+    if tipo == "PRESTADOR":
+        contratacoes = buscar_contratacao_por_prestador_id(id)
+    elif tipo == "CLIENTE":
+        contratacoes = buscar_contratacao_por_client_id(id)
+    return contratacoes  
 
 def confirmar_contratacao(contratacao_id):
     global supabase_client
