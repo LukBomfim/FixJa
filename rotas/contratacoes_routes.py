@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from auth.middleware import login_obrigatorio
-from servicos.contratacoes_service import criar_contratacao_db, buscar_contratacao_por_user_id, buscar_contratacao_por_id_db, atualizar_status_contratacao
+from servicos.contratacoes_service import criar_contratacao_db, buscar_contratacao_por_user_id, buscar_contratacao_por_id_db, atualizar_estado_contratacao
 
 contratacoes_bp = Blueprint('contratacoes', __name__)
 
@@ -60,5 +60,5 @@ def put_contratacao(id):
     if status not in ['pendente', 'aceito', 'concluido', 'cancelado']:
         return jsonify({"erro": "Status inválido"}), 400
 
-    resultado = atualizar_status_contratacao(id, status)
+    resultado = atualizar_estado_contratacao(id, status)
     return jsonify(resultado), 200

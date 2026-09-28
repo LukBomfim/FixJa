@@ -13,7 +13,7 @@ def get_prestadores():
     return jsonify(resultado), 200
 
 
-@prestadores_bp.route('/prestadores/<int:id>', methods=['GET'])
+@prestadores_bp.route('/prestadores/<id>', methods=['GET'])
 def get_prestador(id):
     resultado = buscar_perfil_por_id(id)
     if not resultado:
