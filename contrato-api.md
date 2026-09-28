@@ -153,7 +153,7 @@ Atualiza o status (aceito, concluído, cancelado).
 ```json
 { "status": "aceito" }
 ```
-- Valores possíveis: `"pendente"`, `"aceito"`, `"concluido"`, `"cancelado"`
+- Valores possíveis: `"pendente"`, `"aceito"`, `"concluido"`, `"cancelado"`, `"recusado"`
 
 **Devolve:** o objeto da contratação atualizado.
 

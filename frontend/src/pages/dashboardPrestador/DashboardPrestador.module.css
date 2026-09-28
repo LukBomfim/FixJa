@@ -220,6 +220,29 @@
   font-weight: 600;
 }
 
+.contactDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+}
+
+.contactDetails a {
+  color: #2563eb;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.contactDetails a:hover {
+  text-decoration: underline;
+}
+
+.contactDetails small {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
 .requestInfo p {
   margin: 0.35rem 0;
   color: #64748b;
@@ -259,6 +282,37 @@
 
 .finishBtn:hover {
   background: #15803d;
+}
+
+.requestActions {
+  display: flex;
+  flex: 0 0 104px;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.requestActions button {
+  width: 100%;
+}
+
+.refuseBtn {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff7f7;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.refuseBtn:hover {
+  background: #fee2e2;
+}
+
+.refuseBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .waiting {
@@ -357,7 +411,7 @@
 
 .statusHistory {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.35rem;
   margin-top: 1rem;
 }

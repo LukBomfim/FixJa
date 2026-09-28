@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from os import getenv
 from rotas.categorias_routes import categorias_bp
 from rotas.prestadores_routes import prestadores_bp
 from rotas.contratacoes_routes import contratacoes_bp
@@ -8,7 +9,9 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app)
+origins = {"http://localhost:5173", "http://127.0.0.1:5173"}
+origins.update(origin.strip() for origin in getenv("CORS_ORIGINS", "").split(",") if origin.strip())
+CORS(app, resources={r"/*": {"origins": sorted(origins)}})
 app.register_blueprint(categorias_bp)
 app.register_blueprint(prestadores_bp)
 app.register_blueprint(contratacoes_bp)
@@ -32,4 +35,8 @@ def erro_interno(e):
     return jsonify({"erro": "Erro interno do servidor"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=int(getenv("PORT", "5000")),
+        debug=getenv("FLASK_DEBUG") == "1",
+    )

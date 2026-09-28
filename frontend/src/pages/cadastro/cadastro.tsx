@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import styles from './Cadastro.module.css';
+import React, { useEffect, useState } from 'react';
+import styles from './cadastro.module.css';
+import { api, errorMessage, session } from '../../services/api';
+import type { AccountType, Category } from '../../services/api';
 
-interface RegisterProps {
-  onRegisterSuccess?: () => void;
-  onNavigateToLogin?: () => void;
+export interface RegistrationDraft {
+  username: string;
+  tipo: AccountType;
+  categoria: string | null;
 }
 
-const SERVICE_OPTIONS = [
-  'Encanador', 'Eletricista', 'Pintor', 'Marceneiro', 'Mecânico',
-  'Jardineiro', 'Limpeza/Diarista', 'Cabeleireira/Barbeiro', 'Chaveiro', 'Outro'
-];
+interface RegisterProps {
+  onRegisterSuccess?: (token: string, draft: RegistrationDraft) => void;
+  onNavigateToLogin?: () => void;
+}
 
 interface FormErrors {
   name?: string;
@@ -25,11 +28,19 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
   const [password, setPassword] = useState('');
   const [isProvider, setIsProvider] = useState(false);
   const [selectedService, setSelectedService] = useState<string>('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState('');
 
 
   // erros por campo específico
   const [errors, setErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    api.categories()
+      .then(setCategories)
+      .catch((error: unknown) => setErrors({ general: errorMessage(error) }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,23 +74,22 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
     setErrors({});
     setLoading(true);
 
-    const payload = {
-      name,
-      email,
-      password,
-      role: isProvider ? 'PROVIDER' : 'CLIENT',
-      services: isProvider ? [selectedService] : [],
-    };
-
     try {
-      console.log('Enviando dados do Cadastro:', payload);
-      setTimeout(() => {
-        setLoading(false);
-        if (onRegisterSuccess) onRegisterSuccess();
-      }, 1200);
+      const result = await api.register(email.trim(), password, name.trim());
+      if (!result.token) {
+        setConfirmationMessage('Conta criada. Confirme seu e-mail e entre para concluir o perfil.');
+        return;
+      }
+      session.setToken(result.token);
+      onRegisterSuccess?.(result.token, {
+        username: name.trim(),
+        tipo: isProvider ? 'PRESTADOR' : 'CLIENTE',
+        categoria: isProvider ? selectedService : null,
+      });
     } catch (error) {
+      setErrors({ general: errorMessage(error) });
+    } finally {
       setLoading(false);
-      setErrors({ general: 'Erro ao realizar cadastro. Tente novamente.' });
     }
   };
 
@@ -99,6 +109,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form} noValidate>
+            {confirmationMessage && <p className={styles.successMessage} role="status">{confirmationMessage}</p>}
             {/* Nome */}
             <div className={styles.inputField}>
               <label htmlFor="name" className={styles.label}>Nome Completo</label>
@@ -159,14 +170,14 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                   className={`${styles.typeBtn} ${!isProvider ? styles.typeBtnActive : ''}`}
                   onClick={() => setIsProvider(false)}
                 >
-                  👤 Cliente
+                  Cliente
                 </button>
                 <button
                   type="button"
                   className={`${styles.typeBtn} ${isProvider ? styles.typeBtnActive : ''}`}
                   onClick={() => setIsProvider(true)}
                 >
-                  🛠️ Prestador
+                  Prestador
                 </button>
               </div>
             </div>
@@ -189,19 +200,19 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
                   <option value="" disabled>
                     -- Selecione um serviço --
                   </option>
-                  {SERVICE_OPTIONS.map((service) => (
-                    <option key={service} value={service}>
-                      {service}
+                  {categories.map((item) => (
+                    <option key={item.id} value={item.categoria_name}>
+                      {item.categoria_name}
                     </option>
                   ))}
                 </select>
                 {errors.selectedService && (
-                  <span className={styles.errorMessage}>⚠️ {errors.selectedService}</span>
+                  <span className={styles.errorMessage}>{errors.selectedService}</span>
                 )}
               </div>
             )}
 
-            {errors.general && <span className={styles.errorMessage}>⚠️ {errors.general}</span>}
+            {errors.general && <span className={styles.errorMessage}>{errors.general}</span>}
 
             <button type="submit" disabled={loading} className={styles.submitBtn}>
               {loading ? 'Cadastrando...' : 'Finalizar Cadastro'}

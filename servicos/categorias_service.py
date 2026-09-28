@@ -1,4 +1,6 @@
 from postgrest import APIResponse
+from auth.middleware import get_request_supabase_client
+from postgrest import APIResponse
 from supabase import AuthApiError, Client, create_client
 from supabase_auth import AuthResponse
 from dotenv import load_dotenv
@@ -19,7 +21,5 @@ supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignor
 
 def buscar_todas_categorias():
     global supabase_client
-    response = supabase_client.table("categorias").select("*").execute()
-    data = response.data
-    categorias = [Categoria(**d) for d in data]
-    return categorias
+    response = get_request_supabase_client().table("categorias").select("*").execute()
+    return response.data

@@ -1,4 +1,5 @@
 from postgrest import APIResponse
+from auth.middleware import get_request_supabase_client
 from supabase import AuthApiError, Client, create_client
 from supabase_auth import AuthResponse
 from dotenv import load_dotenv
@@ -18,63 +19,50 @@ supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignor
 
 def criar_contratacao_db(client_id:str,prestador_id:str,descricao:str,data_solicitada_com_horario:str) -> Contratacao:
     global supabase_client
-    contratacao = Contratacao(
-        id=None,
-        client_id=client_id,
-        prestador_id=prestador_id,
-        data_solicitada=data_solicitada_com_horario,
-        descricao=descricao,
-        data=None,
-        created_at=None,
-        status="PENDENTE"
-    )
-    print(contratacao.data_solicitada)
-    response = supabase_client.table("contratacoes").insert({ # type: ignore
-        "client_id":contratacao.client_id,
-        "prestador_id":contratacao.prestador_id,
-        "descricao":contratacao.descricao,
-        "data":contratacao.data.isoformat(),
-        "data_solicitada":contratacao.data_solicitada.strftime("%Y-%m-%d %H:%M:%S"),
-        "status":contratacao.status
-    }).execute()
-    return contratacao
+    data_solicitada = datetime.fromisoformat(data_solicitada_com_horario.replace("Z", "+00:00"))
+    dados = {
+        "client_id": client_id,
+        "prestador_id": prestador_id,
+        "descricao": descricao,
+        "data": data_solicitada.date().isoformat(),
+        "data_solicitada": data_solicitada.isoformat(),
+        "status": "pendente",
+    }
+    response = get_request_supabase_client().table("contratacoes").insert(dados).execute()
+    return response.data[0] if response.data else dados
 
 def buscar_contratacao_por_id_db(id):
     global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("id",id).execute()
-    data = response.data[0]
-    contratacao = Contratacao(**data) # type: ignore
-    return contratacao
+    response = get_request_supabase_client().table("contratacoes").select("*").eq("id", id).limit(1).execute()
+    return response.data[0] if response.data else None
 
       
 def buscar_contratacao_por_client_id(id):
     global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("client_id",id).execute()
-    data = response.data    
-    contratacao = [Contratacao(**d) for d in data] # type: ignore
-    return contratacao
+    response = get_request_supabase_client().table("contratacoes").select("*").eq("client_id",id).execute()
+    return response.data
 
 def buscar_contratacao_por_prestador_id(id):
     global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("prestador_id",id).execute()
-    data = response.data   
-    contratacao = [Contratacao(**d) for d in data] # type: ignore
-    return contratacao
+    response = get_request_supabase_client().table("contratacoes").select("*").eq("prestador_id",id).execute()
+    return response.data
 
 def buscar_contratacao_por_user_id(id,tipo):
     if tipo == "PRESTADOR":
         contratacoes = buscar_contratacao_por_prestador_id(id)
     elif tipo == "CLIENTE":
         contratacoes = buscar_contratacao_por_client_id(id)
+    else:
+        return []
     return contratacoes  
 
 
 def atualizar_estado_contratacao(contratacao_id,estado):
     global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
-    if len(response.data) <= 0:
-        return False
-    data = response.data[0]  
-    contratacao = Contratacao(**data) # type: ignore
-    supabase_client.table("contratacoes").update({"status":estado}).eq("id",contratacao.id).execute()
-    return False    
+    response = (
+        get_request_supabase_client().table("contratacoes")
+        .update({"status": estado})
+        .eq("id", contratacao_id)
+        .execute()
+    )
+    return response.data[0] if response.data else None

@@ -1,511 +1,198 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './DashboardPrestador.module.css';
+import { api, errorMessage } from '../../services/api';
+import type { Contract, ContractStatus, UserProfile } from '../../services/api';
 
-interface Solicitation {
-  id: number;
-  client: string;
-  service: string;
-  description: string;
-  time: string;
-  status: string;
+interface DashboardPrestadorProps {
+  profile: UserProfile;
 }
 
-const INITIAL_REQUESTS: Solicitation[] = [
-  {
-    id: 1,
-    client: 'Maria Santos',
-    service: 'Instalação de chuveiro',
-    description: 'Instalação de chuveiro elétrico no banheiro.',
-    time: '10:30',
-    status: 'PENDENTE',
-  },
-  {
-    id: 2,
-    client: 'Pedro Oliveira',
-    service: 'Troca de tomada',
-    description: 'Troca de duas tomadas da sala.',
-    time: '11:15',
-    status: 'PENDENTE',
-  },
-  {
-    id: 3,
-    client: 'Ana Costa',
-    service: 'Instalação de luminária',
-    description: 'Instalação de luminária no quarto.',
-    time: '12:00',
-    status: 'PENDENTE',
-  },
-];
-
-export const DashboardPrestador: React.FC = () => {
- const [requests, setRequests] = useState<Solicitation[]>(() => {
-  const savedRequests = localStorage.getItem('fixja_requests');
-
- if (savedRequests) {
-  const newRequests = JSON.parse(savedRequests).map(
-    (request: Solicitation) => ({
-      ...request,
-      status: request.status || 'PENDENTE',
-    })
-  );
-
-  return [...INITIAL_REQUESTS, ...newRequests];
-}
-
-  return INITIAL_REQUESTS;
-});
-
-  const [currentService, setCurrentService] =
-    useState<Solicitation | null>(null);
-
-  const [finishedServices, setFinishedServices] = useState<Solicitation[]>([]);
-
-  const [status, setStatus] = useState('PENDENTE');
-
- const handleAttend = (requestId: number) => {
-  const selectedRequest = requests.find(
-    (request) => request.id === requestId
-  );
-
-  if (!selectedRequest) {
-    return;
-  }
-
-  // Apenas seleciona o atendimento.
-  // A solicitação continua na fila.
-  setCurrentService(selectedRequest);
-  setStatus(selectedRequest.status);
+const STATUS_LABELS: Record<ContractStatus, string> = {
+  pendente: 'Pendente',
+  aceito: 'Aceito',
+  concluido: 'Concluído',
+  cancelado: 'Cancelado',
+  recusado: 'Recusado',
 };
 
-const updateRequestStatus = (requestId: number, newStatus: string) => {
-  setRequests((currentRequests) =>
-    currentRequests.map((request) =>
-      request.id === requestId
-        ? { ...request, status: newStatus }
-        : request
-    )
-  );
-};
+const STATUS_ORDER: ContractStatus[] = ['pendente', 'aceito', 'concluido', 'cancelado', 'recusado'];
 
-  const handleStartService = () => {
-  if (!currentService) {
-    return;
-  }
+export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile }) => {
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [currentContract, setCurrentContract] = useState<Contract | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState('');
 
-  setStatus('EM ANDAMENTO');
+  useEffect(() => {
+    let active = true;
+    api.contracts()
+      .then((result) => {
+        if (!active) return;
+        setContracts(result);
+        setCurrentContract(result.find((contract) => contract.status === 'aceito') || null);
+      })
+      .catch((requestError: unknown) => { if (active) setError(errorMessage(requestError)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
-  updateRequestStatus(
-    currentService.id,
-    'EM ANDAMENTO'
-  );
-};
+  const pendingContracts = contracts.filter((contract) => contract.status === 'pendente');
+  const activeContracts = contracts.filter((contract) => contract.status === 'aceito');
+  const finishedContracts = contracts.filter((contract) => contract.status === 'concluido');
 
-const handleUndoStatus = () => {
-  if (!currentService) {
-    return;
-  }
-
-  if (status === 'CONCLUÍDO') {
-    setStatus('EM ANDAMENTO');
-
-    updateRequestStatus(
-      currentService.id,
-      'EM ANDAMENTO'
-    );
-
-    setFinishedServices((currentStack) =>
-      currentStack.filter(
-        (service) => service.id !== currentService.id
-      )
-    );
-
-    return;
-  }
-
-  if (status === 'EM ANDAMENTO') {
-    setStatus('ACEITO');
-
-    updateRequestStatus(
-      currentService.id,
-      'ACEITO'
-    );
-
-    return;
-  }
-
-  if (status === 'ACEITO') {
-    setStatus('PENDENTE');
-
-    updateRequestStatus(
-      currentService.id,
-      'PENDENTE'
-    );
-  }
-};
-  const handleFinishService = () => {
-  if (!currentService) {
-    return;
-  }
-
-  setStatus('CONCLUÍDO');
-
-  // Remove da fila somente quando o serviço é finalizado
-  setRequests((currentRequests) =>
-    currentRequests.filter(
-      (request) => request.id !== currentService.id
-    )
-  );
-
-  // Adiciona na pilha de atendimentos concluídos
-  setFinishedServices((currentStack) => {
-    const alreadyFinished = currentStack.some(
-      (service) => service.id === currentService.id
-    );
-
-    if (alreadyFinished) {
-      return currentStack;
+  const updateStatus = async (status: ContractStatus, targetContract = currentContract) => {
+    if (!targetContract) return;
+    setUpdating(true);
+    setError('');
+    try {
+      const updated = await api.updateContract(targetContract.id, status);
+      setContracts((current) => current.map((contract) => contract.id === updated.id ? updated : contract));
+      setCurrentContract(updated);
+    } catch (requestError) {
+      setError(errorMessage(requestError));
+    } finally {
+      setUpdating(false);
     }
-
-    return [
-      { ...currentService, status: 'CONCLUÍDO' },
-      ...currentStack,
-    ];
-  });
-};
+  };
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <p className={styles.greeting}>Olá, João! 👋</p>
-
-          <h1 className={styles.title}>
-            Painel do profissional
-          </h1>
-
-          <p className={styles.subtitle}>
-            Gerencie suas solicitações de serviço.
-          </p>
+          <p className={styles.greeting}>Olá, {profile.username}</p>
+          <h1 className={styles.title}>Painel do profissional</h1>
+          <p className={styles.subtitle}>Gerencie suas solicitações de serviço.</p>
         </div>
-
         <div className={styles.providerProfile}>
-          <div className={styles.avatar}>
-            👷
-          </div>
-
-          <div>
-            <strong>João Silva</strong>
-            <span>Eletricista</span>
-          </div>
+          <div className={styles.avatar} aria-hidden="true">{profile.username.slice(0, 1).toLocaleUpperCase()}</div>
+          <div><strong>{profile.username}</strong><span>{profile.categoria || 'Prestador'}</span></div>
         </div>
       </header>
 
-      {/* RESUMO */}
+      {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+
       <section className={styles.stats}>
-        <div className={styles.statCard}>
-          <span className={styles.statIcon}>📋</span>
-
-          <div>
-            <strong>{requests.length}</strong>
-            <span>Solicitações na fila</span>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <span className={styles.statIcon}>🔧</span>
-
-          <div>
-            <strong>
-              {currentService ? 1 : 0}
-            </strong>
-            <span>Em atendimento</span>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <span className={styles.statIcon}>⭐</span>
-
-          <div>
-            <strong>4,9</strong>
-            <span>Avaliação</span>
-          </div>
-        </div>
+        <div className={styles.statCard}><span className={styles.statIcon}>Fila</span><div><strong>{pendingContracts.length}</strong><span>Solicitações pendentes</span></div></div>
+        <div className={styles.statCard}><span className={styles.statIcon}>Ativo</span><div><strong>{activeContracts.length}</strong><span>Em atendimento</span></div></div>
+        <div className={styles.statCard}><span className={styles.statIcon}>Média</span><div><strong>{Number(profile.avaliacao || 0).toFixed(1)}</strong><span>Avaliação</span></div></div>
       </section>
 
       <div className={styles.contentGrid}>
-        {/* FILA */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div>
-              <h2>Solicitações pendentes</h2>
-
-              <p>
-                Fila de atendimento
-              </p>
-            </div>
-
-            <span className={styles.fifoBadge}>
-              FILA
-            </span>
+            <div><h2>Solicitações pendentes</h2><p>Fila de atendimento</p></div>
+            <span className={styles.fifoBadge}>FILA</span>
           </div>
-
-          {requests.length === 0 ? (
-            <div className={styles.empty}>
-              <span>✓</span>
-
-              <p>
-                Não há solicitações pendentes.
-              </p>
-            </div>
+          {loading ? <p className={styles.empty}>Carregando solicitações...</p> : pendingContracts.length === 0 ? (
+            <div className={styles.empty}><p>Não há solicitações pendentes.</p></div>
           ) : (
             <div className={styles.queue}>
-              {requests.map((request, index) => (
-                <div
-                  key={request.id}
-                  className={`${styles.requestCard} ${
-                    index === 0 ? styles.nextRequest : ''
-                  }`}
-                >
-                  <div className={styles.requestNumber}>
-                    {index + 1}
-                  </div>
-
+              {pendingContracts.map((contract, index) => (
+                <article key={contract.id} className={`${styles.requestCard} ${index === 0 ? styles.nextRequest : ''}`}>
+                  <div className={styles.requestNumber}>{index + 1}</div>
                   <div className={styles.requestInfo}>
-                    <strong>{request.client}</strong>
-
-                    <span className={styles.serviceName}>
-                      {request.service}
-                    </span>
-
-                    <p>{request.description}</p>
-
-                    <small>
-                      Solicitação às {request.time}
-                    </small>
-                    <span className={styles.requestStatus}>
-                      Status: {request.status}
-                    </span>
+                    <strong>Cliente: {contract.cliente_nome || 'Nome indisponível'}</strong>
+                    <span className={styles.serviceName}>{profile.categoria || 'Serviço'}</span>
+                    <p>{contract.descricao}</p>
+                    <small>Solicitado para {new Date(contract.data_solicitada).toLocaleString('pt-BR')}</small>
+                    <span className={styles.requestStatus}>{STATUS_LABELS[contract.status]}</span>
                   </div>
-
-                  <button
-                    type="button"
-                    className={styles.attendBtn}
-                  onClick={() => handleAttend(request.id)}
-                >
-              Atender
-          </button>
-                </div>
+                  <div className={styles.requestActions}>
+                    <button type="button" className={styles.attendBtn} onClick={() => setCurrentContract(contract)}>Atender</button>
+                    <button type="button" className={styles.refuseBtn} disabled={updating} onClick={() => void updateStatus('recusado', contract)}>Recusar</button>
+                  </div>
+                </article>
               ))}
             </div>
           )}
         </section>
 
-        {/* ATENDIMENTO ATUAL */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div>
-              <h2>Atendimento atual</h2>
-
-              <p>
-                Controle de status
-              </p>
-            </div>
-
-            <span className={styles.stackBadge}>
-              PILHA
-            </span>
+            <div><h2>Atendimentos em andamento</h2><p>Serviços aceitos</p></div>
+            <span className={styles.stackBadge}>{activeContracts.length}</span>
           </div>
-
-          {!currentService ? (
-            <div className={styles.noService}>
-              <span>🔧</span>
-
-              <p>
-                Nenhum atendimento em andamento.
-              </p>
-
-              <small>
-                Atenda uma solicitação da fila.
-              </small>
+          {loading ? <div className={styles.empty}>Carregando atendimentos...</div> : activeContracts.length === 0 ? (
+            <div className={styles.empty}><p>Não há atendimentos em andamento.</p></div>
+          ) : (
+            <div className={styles.queue}>
+              {activeContracts.map((contract) => (
+                <article key={contract.id} className={styles.requestCard}>
+                  <div className={styles.requestInfo}>
+                    <strong>Cliente: {contract.cliente_nome || 'Nome indisponível'}</strong>
+                    <span className={styles.serviceName}>{profile.categoria || 'Serviço'}</span>
+                    <p>{contract.descricao}</p>
+                    <small>Solicitado para {new Date(contract.data_solicitada).toLocaleString('pt-BR')}</small>
+                    <div className={styles.contactDetails}>
+                      {contract.cliente_telefone && <a href={`tel:${contract.cliente_telefone.replace(/[^\d+]/g, '')}`}>Telefone: {contract.cliente_telefone}</a>}
+                      {contract.cliente_email && <a href={`mailto:${contract.cliente_email}`}>E-mail: {contract.cliente_email}</a>}
+                      {!contract.cliente_telefone && !contract.cliente_email && <small>Contato não informado.</small>}
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
+          )}
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div><h2>Atendimento atual</h2><p>Controle de status</p></div>
+            <span className={styles.stackBadge}>STATUS</span>
+          </div>
+          {!currentContract ? (
+            <div className={styles.noService}><p>Nenhuma solicitação selecionada.</p><small>Selecione uma solicitação pendente.</small></div>
           ) : (
             <div className={styles.currentService}>
               <div className={styles.currentClient}>
-                <div className={styles.clientAvatar}>
-                  {currentService.client.charAt(0)}
-                </div>
-
-                <div>
-                  <strong>
-                    {currentService.client}
-                  </strong>
-
-                  <span>
-                    {currentService.service}
-                  </span>
-                </div>
+                <div className={styles.clientAvatar}>{(currentContract.cliente_nome || 'C').slice(0, 1).toLocaleUpperCase()}</div>
+                <div><strong>Cliente: {currentContract.cliente_nome || 'Nome indisponível'}</strong><span>{profile.categoria || 'Serviço'}</span></div>
               </div>
-
-              <div className={styles.statusBox}>
-                <span>Status atual</span>
-
-                <strong>{status}</strong>
+              <p>{currentContract.descricao}</p>
+              <div className={styles.contactDetails}>
+                {currentContract.cliente_telefone && <a href={`tel:${currentContract.cliente_telefone.replace(/[^\d+]/g, '')}`}>Telefone: {currentContract.cliente_telefone}</a>}
+                {currentContract.cliente_email && <a href={`mailto:${currentContract.cliente_email}`}>E-mail: {currentContract.cliente_email}</a>}
+                {!currentContract.cliente_telefone && !currentContract.cliente_email && <small>Contato não informado.</small>}
               </div>
-
+              <div className={styles.statusBox}><span>Status atual</span><strong>{STATUS_LABELS[currentContract.status]}</strong></div>
               <div className={styles.statusHistory}>
-                <div
-                  className={
-                    status === 'PENDENTE'
-                      ? styles.activeStatus
-                      : ''
-                  }
-                >
-                  PENDENTE
-                </div>
-
-                <div
-                  className={
-                    status === 'ACEITO'
-                      ? styles.activeStatus
-                      : ''
-                  }
-                >
-                  ACEITO
-                </div>
-
-                <div
-                  className={
-                    status === 'EM ANDAMENTO'
-                      ? styles.activeStatus
-                      : ''
-                  }
-                >
-                  EM ANDAMENTO
-                </div>
-
-                <div
-                  className={
-                    status === 'CONCLUÍDO'
-                      ? styles.activeStatus
-                      : ''
-                  }
-                >
-                  CONCLUÍDO
-                </div>
+                {STATUS_ORDER.map((status) => (
+                  <div key={status} className={currentContract.status === status ? styles.activeStatus : ''}>{STATUS_LABELS[status]}</div>
+                ))}
               </div>
-
               <div className={styles.actions}>
-                {status !== 'PENDENTE' && (
-                  <button
-                    type="button"
-                    className={styles.secondaryBtn}
-                    onClick={handleUndoStatus}
-                  >
-                    ↩ Desfazer avanço
-                  </button>
-                )}
-                {status === 'PENDENTE' && (
-  <button
-    type="button"
-    className={styles.primaryBtn}
-    onClick={() => {
-      setStatus('ACEITO');
-      updateRequestStatus(currentService.id, 'ACEITO');
-    }}
-  >
-    Aceitar serviço
-  </button>
-)}
-                {status === 'ACEITO' && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    onClick={handleStartService}
-                  >
-                    Iniciar serviço
-                  </button>
-                )}
-
-                {status === 'EM ANDAMENTO' && (
-                  <button
-                    type="button"
-                    className={styles.finishBtn}
-                    onClick={handleFinishService}
-                  >
-                    Finalizar serviço
-                  </button>
-                )}
-
-                {status === 'CONCLUÍDO' && (
-                  <div className={styles.completed}>
-                    ✓ Serviço concluído
-                  </div>
-                )}
+                {currentContract.status === 'pendente' && <button type="button" className={styles.primaryBtn} disabled={updating} onClick={() => void updateStatus('aceito')}>{updating ? 'Salvando...' : 'Aceitar serviço'}</button>}
+                {currentContract.status === 'aceito' && <button type="button" className={styles.finishBtn} disabled={updating} onClick={() => void updateStatus('concluido')}>{updating ? 'Salvando...' : 'Finalizar serviço'}</button>}
+                {currentContract.status === 'concluido' && <div className={styles.completed}>Serviço concluído</div>}
+                {currentContract.status === 'cancelado' && <div className={styles.waiting}>Solicitação cancelada</div>}
+                              {currentContract.status === 'recusado' && <div className={styles.waiting}>Solicitação recusada</div>}
               </div>
             </div>
           )}
         </section>
-                <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h2>Atendimentos finalizados</h2>
-              <p>Histórico em pilha</p>
-            </div>
 
-            <span className={styles.stackBadge}>
-              PILHA
-            </span>
-          </div>
-
-          {finishedServices.length === 0 ? (
-            <div className={styles.noService}>
-              <span>📚</span>
-
-              <p>
-                Nenhum atendimento finalizado.
-              </p>
-
-              <small>
-                Os atendimentos concluídos aparecerão aqui.
-              </small>
-            </div>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}><div><h2>Atendimentos finalizados</h2><p>Histórico de contratações</p></div></div>
+          {finishedContracts.length === 0 ? (
+            <div className={styles.noService}><p>Nenhum atendimento finalizado.</p></div>
           ) : (
             <div className={styles.queue}>
-              {finishedServices.map((service, index) => (
-                <div
-                  key={service.id}
-                  className={styles.requestCard}
-                >
-                  <div className={styles.requestNumber}>
-                    {index + 1}
-                  </div>
-
+              {finishedContracts.map((contract, index) => (
+                <article key={contract.id} className={styles.requestCard}>
+                  <div className={styles.requestNumber}>{index + 1}</div>
                   <div className={styles.requestInfo}>
-                    <strong>{service.client}</strong>
-
-                    <span className={styles.serviceName}>
-                      {service.service}
-                    </span>
-
-                    <p>{service.description}</p>
-
-                    <small>
-                      Atendimento finalizado
-                    </small>
+                    <strong>Cliente: {contract.cliente_nome || 'Nome indisponível'}</strong>
+                    <span className={styles.serviceName}>{profile.categoria || 'Serviço'}</span>
+                    <p>{contract.descricao}</p>
+                    <small>{STATUS_LABELS[contract.status]}</small>
                   </div>
-
-                  {index === 0 && (
-                    <span className={styles.fifoBadge}>
-                      TOPO
-                    </span>
-                  )}
-                </div>
+                </article>
               ))}
             </div>
           )}
         </section>
       </div>
-
     </div>
   );
 };

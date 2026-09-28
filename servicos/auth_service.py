@@ -16,7 +16,7 @@ except:
 supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignore
 
 
-def registrar_usuario(email:str,senha:str,username:str) -> Usuario | None:
+def registrar_usuario(email:str,senha:str,username:str) -> tuple[Usuario, str | None] | None:
     """
     Registra um usuario no banco de dados caso não exista, se existir exibi um erro e retorna None
     """
@@ -29,52 +29,31 @@ def registrar_usuario(email:str,senha:str,username:str) -> Usuario | None:
 
     global supabase_client
     try:
-        response:AuthResponse | None = supabase_client.auth.sign_up(
+        auth_client = create_client(SUPABASE_URL, SUPABASE_KEY) # type: ignore
+        response:AuthResponse = auth_client.auth.sign_up(
             {
                 "email": usuario.email,
                 "password":usuario.senha
             }
         )
-        usuario.id = response.user.id    
+        if not response.user:
+            return None
+        usuario.id = response.user.id
+        usuario.senha = ""
+        return usuario, response.session.access_token if response.session else None
     except AuthApiError as e:
         print(f"ERRO: não Foi possivel cadastrar o usuario no banco de dados:{e}")      
-    return usuario
-def criar_perfil(user:Usuario,data_nascimento:str,telefone:str,tipo:str,categoria:str|None,cidade:str,descricao:str|None,avaliacao:float):
-    usuario = user
-    usuario.telefone = telefone
-    usuario.tipo = tipo 
-    usuario.categoria = categoria
-    usuario.cidade = cidade
-    usuario.descricao = descricao
-    usuario.avaliacao = avaliacao
-    if data_nascimento and isinstance(data_nascimento, str):
-        usuario.data_nascimento = datetime.fromisoformat(data_nascimento)
-    else:
-        usuario.data_nascimento = datetime(1990,1,1)
-    try:    
-        supabase_client.table("profiles").insert({
-            "id":usuario.id, # type: ignore
-            "email":usuario.email,
-            "data_nascimento":usuario.data_nascimento.isoformat(),
-            "username":usuario.username,
-            "telefone":usuario.telefone,
-            "tipo":usuario.tipo,
-            "categoria":categoria,
-            "cidade":cidade,
-            "descricao":descricao,
-            "avaliacao":avaliacao
-        }).execute()
     except Exception as e:
-        print(f"Erro ao tentar criar perfil:{e}")
-        return False    
-    return usuario
+        print(f"ERRO: não foi possível cadastrar o usuário: {e}")
+    return None
 
-def logar_usuario(email: str, senha: str) -> tuple[Usuario, str] | None:
+def logar_usuario(email: str, senha: str) -> tuple[dict | None, str] | None:
     """
     Retorna (usuario, access_token) se as credenciais forem válidas, None caso contrário.
     """
     try:
-        response = supabase_client.auth.sign_in_with_password(
+        auth_client = create_client(SUPABASE_URL, SUPABASE_KEY) # type: ignore
+        response = auth_client.auth.sign_in_with_password(
             {"email": email, "password": senha}
         )
     except AuthApiError:
@@ -87,8 +66,10 @@ def logar_usuario(email: str, senha: str) -> tuple[Usuario, str] | None:
         supabase_client.table("profiles")
         .select("*")
         .eq("id", response.user.id)
-        .single()
         .execute()
     )
-    usuario = Usuario(**payload.data, senha=None)
+    registro = payload.data[0] if payload.data else None
+    usuario = registro if isinstance(registro, dict) else None
+    if usuario:
+        usuario.pop("senha", None)
     return usuario, response.session.access_token

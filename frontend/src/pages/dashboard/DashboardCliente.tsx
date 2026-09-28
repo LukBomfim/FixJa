@@ -1,227 +1,309 @@
-import React, { useState } from 'react';
-import styles from './DashboardCliente.module.css';
-import { Provider } from '../../types';
+    import React, { useEffect, useState } from 'react';
+    import styles from './DashboardCliente.module.css';
+    import { api, errorMessage } from '../../services/api';
+    import type { Category, Contract, ContractStatus, Provider, Review, UserProfile } from '../../services/api';
 
-// Dados mockados para exibição inicial
-const MOCK_PROVIDERS: Provider[] = [
-  {
-    id: '1',
-    name: 'Carlos Oliveira',
-    email: 'carlos.eletrica@gmail.com',
-    service: 'Eletricista',
-    phone: '(11) 98765-4321',
-    bio: 'Especialista em instalações residenciais e comerciais com mais de 8 anos de experiência.',
-    rating: 4.9,
-    avatarUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop',
-  },
-  {
-    id: '2',
-    name: 'Fernanda Lima',
-    email: 'fernanda.encanadora@gmail.com',
-    service: 'Encanador',
-    phone: '(11) 91234-5678',
-    bio: 'Resolução de vazamentos, desentupimentos e instalação de metais sanitários em geral.',
-    rating: 4.8,
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop',
-  },
-  {
-    id: '3',
-    name: 'Roberto Souza',
-    email: 'roberto.pinturas@gmail.com',
-    service: 'Pintor',
-    phone: '(11) 97777-8888',
-    bio: 'Pintura residencial, comercial, textura e aplicação de efeitos decorativos.',
-    rating: 4.7,
-    avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop',
-  },
-    {
-    id: '4',
-    name: 'João Silva',
-    email: 'joao.eletricista@gmail.com',
-    service: 'Eletricista',
-    phone: '(82) 99999-9999',
-    bio: 'Eletricista especializado em instalações residenciais, manutenção elétrica e troca de tomadas e luminárias.',
-    rating: 4.9,
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop',
-  },
-];
+    interface DashboardClientProps {
+      profile: UserProfile;
+    }
 
-export const DashboardClient: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [serviceRequested, setServiceRequested] = useState(false);
+    const STATUS_LABELS: Record<ContractStatus, string> = {
+      pendente: 'Pendente',
+      aceito: 'Aceito',
+      concluido: 'Concluído',
+      cancelado: 'Cancelado',
+      recusado: 'Recusado',
+    };
 
-  // filtro pelo serviço ou prestador
-  const filteredProviders = MOCK_PROVIDERS.filter((p) =>
-    p.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    export const DashboardClient: React.FC<DashboardClientProps> = ({ profile }) => {
+      const [providers, setProviders] = useState<Provider[]>([]);
+      const [categories, setCategories] = useState<Category[]>([]);
+      const [contracts, setContracts] = useState<Contract[]>([]);
+      const [reviews, setReviews] = useState<Review[]>([]);
+      const [reviewsLoading, setReviewsLoading] = useState(false);
+      const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [category, setCategory] = useState('');
+      const [city, setCity] = useState('');
+      const [description, setDescription] = useState('');
+      const [requestedDate, setRequestedDate] = useState('');
+      const [mode, setMode] = useState<'providers' | 'contracts'>('providers');
+      const [loading, setLoading] = useState(true);
+      const [contractsLoading, setContractsLoading] = useState(false);
+      const [providerLoading, setProviderLoading] = useState(false);
+      const [submitting, setSubmitting] = useState(false);
+      const [error, setError] = useState('');
+      const [notice, setNotice] = useState('');
+      const [reviewNotes, setReviewNotes] = useState<Record<string, number>>({});
+      const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
 
-    const handleRequestService = () => {
-  if (!selectedProvider) {
-    return;
-  }
+      useEffect(() => {
+        let active = true;
+        setLoading(true);
+        Promise.all([api.providers(), api.categories()])
+          .then(([providerResults, categoryResults]) => {
+            if (!active) return;
+            setProviders(providerResults);
+            setCategories(categoryResults);
+          })
+          .catch((requestError: unknown) => {
+            if (active) setError(errorMessage(requestError));
+          })
+          .finally(() => {
+            if (active) setLoading(false);
+          });
+        return () => { active = false; };
+      }, []);
 
-  const newRequest = {
-    id: Date.now(),
-    client: 'Cliente atual',
-    service: selectedProvider.service,
-    description: `Solicitação de ${selectedProvider.service.toLowerCase()}.`,
-    time: new Date().toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-  };
+      useEffect(() => {
+        if (mode !== 'contracts') return;
+        let active = true;
+        setContractsLoading(true);
+        setError('');
+        api.contracts()
+          .then((result) => { if (active) setContracts(result); })
+          .catch((requestError: unknown) => { if (active) setError(errorMessage(requestError)); })
+          .finally(() => { if (active) setContractsLoading(false); });
+        return () => { active = false; };
+      }, [mode]);
 
-  const existingRequests = JSON.parse(
-    localStorage.getItem('fixja_requests') || '[]'
-  );
+      useEffect(() => {
+        if (!selectedProvider) return;
+        let active = true;
+        setReviewsLoading(true);
+        api.reviews(selectedProvider.id)
+          .then((result) => { if (active) setReviews(result); })
+          .catch((requestError: unknown) => { if (active) setError(errorMessage(requestError)); })
+          .finally(() => { if (active) setReviewsLoading(false); });
+        return () => { active = false; };
+      }, [selectedProvider?.id]);
 
-  localStorage.setItem(
-    'fixja_requests',
-    JSON.stringify([...existingRequests, newRequest])
-  );
+      const filteredProviders = providers.filter((provider) => {
+        const query = searchTerm.trim().toLocaleLowerCase();
+        return !query || [provider.username, provider.categoria, provider.cidade]
+          .some((value) => value?.toLocaleLowerCase().includes(query));
+      });
 
-  setServiceRequested(true);
+      const handleSearch = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+          setProviders(await api.providers({ categoria: category || undefined, cidade: city || undefined }));
+        } catch (requestError) {
+          setError(errorMessage(requestError));
+        } finally {
+          setLoading(false);
+        }
+      };
 
-  console.log('Solicitação adicionada à fila:', newRequest);
-};
+      const handleOpenProvider = async (id: string) => {
+        setProviderLoading(true);
+        setError('');
+        setNotice('');
+        try {
+          setSelectedProvider(await api.provider(id));
+        } catch (requestError) {
+          setError(errorMessage(requestError));
+        } finally {
+          setProviderLoading(false);
+        }
+      };
 
-  // exibir o perfil
-  if (selectedProvider) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.profileView}>
-          <button
-            type="button"
-            className={styles.backBtn}
-            onClick={() => setSelectedProvider(null)}
-          >
-            ← Voltar para a lista
-          </button>
+      const handleCreateContract = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!selectedProvider) return;
+        setSubmitting(true);
+        setError('');
+        try {
+          await api.createContract({
+            prestador_id: selectedProvider.id,
+            descricao: description.trim(),
+            data_solicitada: new Date(requestedDate).toISOString(),
+          });
+          setNotice('Sua solicitação foi registrada. Você pode acompanhar o status em Minhas contratações.');
+          setDescription('');
+          setRequestedDate('');
+        } catch (requestError) {
+          setError(errorMessage(requestError));
+        } finally {
+          setSubmitting(false);
+        }
+      };
 
-          <div className={styles.profileHeader}>
-            <img
-              src={selectedProvider.avatarUrl || 'https://via.placeholder.com/80'}
-              alt={selectedProvider.name}
-              className={styles.profileAvatar}
-            />
-            <div>
-              <h2 className={styles.title}>{selectedProvider.name}</h2>
-              <span className={styles.serviceBadge}>{selectedProvider.service}</span>
-            </div>
-          </div>
+      const handleCancelContract = async (contract: Contract) => {
+        setError('');
+        try {
+          const updated = await api.updateContract(contract.id, 'cancelado');
+          setContracts((current) => current.map((item) => item.id === updated.id ? updated : item));
+        } catch (requestError) {
+          setError(errorMessage(requestError));
+        }
+      };
 
-          <p className={styles.subtitle}>{selectedProvider.bio}</p>
+      const handleConfirmCompletion = async (contract: Contract) => {
+        setError('');
+        try {
+          const updated = await api.updateContract(contract.id, 'concluido');
+          setContracts((current) => current.map((item) => item.id === updated.id ? updated : item));
+          setNotice('Conclusão do serviço confirmada.');
+        } catch (requestError) {
+          setError(errorMessage(requestError));
+        }
+      };
 
-          <div className={styles.contactBox}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: '#0f172a' }}>
-              Informações de Contato
-            </h3>
-            <div className={styles.contactItem}>
-              <strong>Telefone / WhatsApp:</strong> {selectedProvider.phone}
-            </div>
-            <div className={styles.contactItem}>
-              <strong>E-mail:</strong> {selectedProvider.email}
-            </div>
-          </div>
+      const handleReview = async (contract: Contract) => {
+        setError('');
+        try {
+          await api.createReview(contract.id, reviewNotes[contract.id] || 5, reviewComments[contract.id] || '');
+          setContracts((current) => current.map((item) => item.id === contract.id ? { ...item, avaliada: true } : item));
+          setNotice('Avaliação registrada.');
+        } catch (requestError) {
+          setError(errorMessage(requestError));
+        }
+      };
 
-            <div className={styles.requestBox}>
-            {!serviceRequested ? (
-              <>
-                <h3 className={styles.requestTitle}>
-                  Precisa desse serviço?
-                </h3>
-
-                <p className={styles.requestText}>
-                  Solicite um atendimento com {selectedProvider.name}.
-                </p>
-
-                <button
-                  type="button"
-                  className={styles.requestBtn}
-                  onClick={handleRequestService}
-                >
-                  Solicitar serviço
-                </button>
-              </>
-            ) : (
-              <div className={styles.successMessage}>
-                <div className={styles.successIcon}>✓</div>
-
-                <h3>Solicitação enviada!</h3>
-
-                <p>
-                  Seu pedido foi colocado na fila de atendimento de{' '}
-                  <strong>{selectedProvider.name}</strong>.
-                </p>
-
-                <span className={styles.queueBadge}>
-                  Status: PENDENTE
-                </span>
-              </div>
-            )}
-          </div>
-
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Encontre o profissional ideal</h1>
-        <p className={styles.subtitle}>
-          Busque por serviços ou navegando pelos profissionais disponíveis no FixJá.
-        </p>
-      </header>
-
-      <div className={styles.searchContainer}>
-        <input
-          type="text"
-          placeholder="Pesquise por serviço (ex: Eletricista, Encanador, Pintor)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={styles.searchInput}
-        />
-      </div>
-
-      {filteredProviders.length === 0 ? (
-        <div className={styles.emptyState}>
-          Nenhum prestador encontrado para o serviço "{searchTerm}".
-        </div>
-      ) : (
-        <div className={styles.grid}>
-          {filteredProviders.map((provider) => (
-            <div key={provider.id} className={styles.card}>
-              <div>
-                <div className={styles.cardHeader}>
-                  <img
-                    src={provider.avatarUrl || 'https://via.placeholder.com/52'}
-                    alt={provider.name}
-                    className={styles.avatar}
-                  />
-                  <div>
-                    <h3 className={styles.providerName}>{provider.name}</h3>
-                  </div>
-                </div>
-                <span className={styles.serviceBadge}>{provider.service}</span>
-              </div>
-
-              <button
-                type="button"
-                className={styles.viewProfileBtn}
-                onClick={() => setSelectedProvider(provider)}
-              >
-                Ver Perfil e Contato
+      if (selectedProvider) {
+        return (
+          <div className={styles.container}>
+            <section className={styles.profileView}>
+              <button type="button" className={styles.backBtn} onClick={() => setSelectedProvider(null)}>
+                Voltar para a lista
               </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+              <div className={styles.profileHeader}>
+                <div className={styles.profileAvatar} aria-hidden="true">{selectedProvider.username.slice(0, 1).toLocaleUpperCase()}</div>
+                <div>
+                  <h2 className={styles.title}>{selectedProvider.username}</h2>
+                  <span className={styles.serviceBadge}>{selectedProvider.categoria || 'Prestador'}</span>
+                  <p className={styles.providerLocation}>{selectedProvider.cidade}</p>
+                </div>
+              </div>
+              <p className={styles.subtitle}>{selectedProvider.descricao || 'Este prestador ainda não adicionou uma descrição.'}</p>
+              <p className={styles.rating}>Avaliação: {Number(selectedProvider.avaliacao || 0).toFixed(1)}</p>
+              <div className={styles.contactBox}>
+                <h3 className={styles.contactTitle}>Avaliações</h3>
+                {reviewsLoading ? <p className={styles.providerLocation}>Carregando avaliações...</p> : reviews.length === 0 ? (
+                  <p className={styles.providerLocation}>Ainda não há avaliações.</p>
+                ) : reviews.map((review) => (
+                  <div key={review.id} className={styles.reviewItem}>
+                    <strong>Nota {review.nota} de 5</strong>
+                    {review.comentario && <p>{review.comentario}</p>}
+                    <small>{new Date(review.data).toLocaleDateString('pt-BR')}</small>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.contactBox}>
+                <h3 className={styles.contactTitle}>Informações de contato</h3>
+                <div className={styles.contactItem}><strong>Telefone:</strong> {selectedProvider.telefone || 'Não informado'}</div>
+                <div className={styles.contactItem}><strong>E-mail:</strong> {selectedProvider.email}</div>
+              </div>
+              {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+              {notice && <p className={styles.successText} role="status">{notice}</p>}
+              <form className={styles.requestBox} onSubmit={handleCreateContract}>
+                <h3 className={styles.requestTitle}>Solicitar serviço</h3>
+                <div className={styles.inputField}>
+                  <label className={styles.fieldLabel} htmlFor="request-description">Descreva o serviço</label>
+                  <textarea id="request-description" className={styles.formInput} value={description} onChange={(event) => setDescription(event.target.value)} required rows={3} />
+                </div>
+                <div className={styles.inputField}>
+                  <label className={styles.fieldLabel} htmlFor="request-date">Data e horário desejados</label>
+                  <input id="request-date" className={styles.formInput} type="datetime-local" value={requestedDate} onChange={(event) => setRequestedDate(event.target.value)} required />
+                </div>
+                <button type="submit" className={styles.requestBtn} disabled={submitting}>
+                  {submitting ? 'Enviando...' : 'Solicitar serviço'}
+                </button>
+              </form>
+            </section>
+          </div>
+        );
+      }
 
-export default DashboardClient;
+      return (
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>{mode === 'providers' ? `Olá, ${profile.username}` : 'Minhas contratações'}</h1>
+            <p className={styles.subtitle}>{mode === 'providers' ? 'Encontre profissionais disponíveis na sua região.' : 'Acompanhe as solicitações e atualize quando necessário.'}</p>
+          </header>
+          <div className={styles.dashboardToolbar}>
+            <button type="button" className={styles.secondaryAction} onClick={() => { setMode('contracts'); setNotice(''); }}>Minhas contratações</button>
+          </div>
+          {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+          {notice && <p className={styles.successText} role="status">{notice}</p>}
+
+          {mode === 'providers' ? (
+            <>
+              <form className={styles.searchForm} onSubmit={handleSearch}>
+                <input type="search" aria-label="Buscar por nome, serviço ou cidade" placeholder="Nome, serviço ou cidade" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className={styles.searchInput} />
+                <select aria-label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)} className={styles.searchSelect}>
+                  <option value="">Todas as categorias</option>
+                  {categories.map((item) => <option key={item.id} value={item.categoria_name}>{item.categoria_name}</option>)}
+                </select>
+                <input type="search" aria-label="Filtrar por cidade" placeholder="Cidade" value={city} onChange={(event) => setCity(event.target.value)} className={styles.searchInput} />
+                <button type="submit" className={styles.viewProfileBtn} disabled={loading}>Buscar</button>
+              </form>
+              {loading || providerLoading ? <p className={styles.emptyState} role="status">Carregando prestadores...</p> : filteredProviders.length === 0 ? (
+                <div className={styles.emptyState}>{error ? 'Não foi possível carregar prestadores.' : 'Nenhum prestador encontrado.'}</div>
+              ) : (
+                <div className={styles.grid}>
+                  {filteredProviders.map((provider) => (
+                    <article key={provider.id} className={styles.card}>
+                      <div>
+                        <div className={styles.cardHeader}>
+                          <div className={styles.avatar} aria-hidden="true">{provider.username.slice(0, 1).toLocaleUpperCase()}</div>
+                          <div><h2 className={styles.providerName}>{provider.username}</h2><p className={styles.providerLocation}>{provider.cidade}</p></div>
+                        </div>
+                        <span className={styles.serviceBadge}>{provider.categoria || 'Prestador'}</span>
+                        <p className={styles.providerRating}>Avaliação: {Number(provider.avaliacao || 0).toFixed(1)}</p>
+                      </div>
+                      <button type="button" className={styles.viewProfileBtn} onClick={() => void handleOpenProvider(provider.id)}>Ver perfil</button>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : contractsLoading ? (
+            <p className={styles.emptyState} role="status">Carregando contratações...</p>
+          ) : contracts.length === 0 ? (
+            <div className={styles.emptyState}>Você ainda não tem contratações.</div>
+          ) : (
+            <div className={styles.contractList}>
+              {contracts.map((contract) => (
+                <article key={contract.id} className={styles.contractItem}>
+                  <div className={styles.contractHeading}>
+                    <strong>Prestador: {contract.prestador_nome || 'Nome indisponível'}</strong>
+                    <span className={styles.queueBadge}>Status: {STATUS_LABELS[contract.status]}</span>
+                  </div>
+                  <p>{contract.descricao}</p>
+                  {contract.status === 'recusado' && (
+                    <p className={styles.refusalNotice} role="status">
+                      {contract.mensagem || 'O prestador recusou o seu pedido.'}
+                    </p>
+                  )}
+                  <small>Data solicitada: {new Date(contract.data_solicitada).toLocaleString('pt-BR')}</small>
+                  {(contract.status === 'pendente' || contract.status === 'aceito') && (
+                    <div className={styles.contractActions}>
+                      <button type="button" className={styles.secondaryAction} onClick={() => void handleCancelContract(contract)}>Cancelar solicitação</button>
+                      {contract.status === 'aceito' && (
+                        <button type="button" className={styles.viewProfileBtn} onClick={() => void handleConfirmCompletion(contract)}>Confirmar conclusão</button>
+                      )}
+                    </div>
+                  )}
+                  {contract.status === 'concluido' && !contract.avaliada && (
+                    <div className={styles.reviewForm}>
+                      <label className={styles.fieldLabel} htmlFor={`review-note-${contract.id}`}>Nota de 1 a 5</label>
+                      <input id={`review-note-${contract.id}`} type="number" min="1" max="5" value={reviewNotes[contract.id] || 5} onChange={(event) => setReviewNotes((current) => ({ ...current, [contract.id]: Number(event.target.value) }))} className={styles.formInput} />
+                      <label className={styles.fieldLabel} htmlFor={`review-comment-${contract.id}`}>Comentário</label>
+                      <textarea id={`review-comment-${contract.id}`} value={reviewComments[contract.id] || ''} onChange={(event) => setReviewComments((current) => ({ ...current, [contract.id]: event.target.value }))} className={styles.formInput} rows={2} />
+                      <button type="button" className={styles.viewProfileBtn} onClick={() => void handleReview(contract)}>Enviar avaliação</button>
+                    </div>
+                  )}
+                  {contract.status === 'concluido' && contract.avaliada && <p className={styles.providerLocation}>Avaliação enviada.</p>}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    export default DashboardClient;

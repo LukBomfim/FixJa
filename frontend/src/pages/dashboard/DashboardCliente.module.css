@@ -59,6 +59,30 @@
   justify-content: space-between;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: cardEnter 280ms ease-out both;
+}
+
+.card:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.card:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.card:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .card:hover {
@@ -76,9 +100,16 @@
 .avatar {
   width: 52px;
   height: 52px;
+  display: grid;
+  flex: 0 0 52px;
+  place-items: center;
   border-radius: 50%;
   object-fit: cover;
   background-color: #e2e8f0;
+  color: #2563eb;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .providerName {
@@ -179,6 +210,210 @@
 .contactItem strong {
   color: #0f172a;
 }
+
+.dashboardToolbar,
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.searchForm {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(170px, 1fr) minmax(150px, 1fr) auto;
+}
+
+.searchSelect,
+.formInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+}
+
+.searchSelect:focus,
+.formInput:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.formInput {
+  resize: vertical;
+}
+
+.inputField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.fieldLabel {
+  color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.secondaryAction {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondaryAction:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.providerLocation,
+.providerRating,
+.rating {
+  margin: 0.25rem 0 0.75rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.contactTitle {
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.reviewItem {
+  padding: 0.75rem 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.reviewItem strong {
+  font-size: 0.85rem;
+}
+
+.reviewItem p {
+  margin: 0.35rem 0;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.reviewItem small {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.contractList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.contractItem {
+  padding: 1.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.contractHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.contractActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.contractItem > p {
+  margin: 0.7rem 0;
+  color: #475569;
+}
+
+.contractItem small {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #64748b;
+}
+
+.reviewForm {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 440px;
+  margin-top: 1rem;
+}
+
+.errorMessage {
+  margin: 0.75rem 0;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+.refusalNotice {
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff7f7;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+.successText {
+  margin: 0.75rem 0;
+  color: #166534;
+  font-size: 0.875rem;
+}
+
+.profileAvatar {
+  display: flex;
+  flex: 0 0 80px;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .searchForm {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .searchForm .viewProfileBtn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboardToolbar,
+  .contractHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .searchForm {
+    grid-template-columns: 1fr;
+  }
+
+  .searchForm .viewProfileBtn {
+    grid-column: auto;
+  }
+}
 .requestBox {
   margin-top: 1.5rem;
   padding: 1.25rem;
@@ -255,4 +490,15 @@
   color: #92400e;
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
 }

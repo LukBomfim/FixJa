@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import styles from './Login.module.css';
+import { ApiError, api, errorMessage, session } from '../../services/api';
+import type { UserProfile } from '../../services/api';
 
 interface LoginProps {
-  onLoginSuccess?: () => void;
+  onLoginSuccess?: (profile: UserProfile | null) => void;
   onNavigateToRegister?: () => void;
 }
 
@@ -18,7 +20,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: FormErrors = {};
 
@@ -40,11 +42,23 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
     setErrors({});
     setLoading(true);
 
-    // Simulação de Login
-    setTimeout(() => {
+    try {
+      const result = await api.login(email, password);
+      session.setToken(result.token);
+      let profile = result.usuario;
+      if (!profile) {
+        try {
+          profile = await api.profile();
+        } catch (error) {
+          if (!(error instanceof ApiError) || error.status !== 404) throw error;
+        }
+      }
+      onLoginSuccess?.(profile);
+    } catch (error) {
+      setErrors({ general: errorMessage(error) });
+    } finally {
       setLoading(false);
-      if (onLoginSuccess) onLoginSuccess();
-    }, 1000);
+    }
   };
 
   return (
@@ -82,12 +96,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
 
             {/* Senha */}
             <div className={styles.inputField}>
-              <div className={styles.labelWithLink}>
-                <label htmlFor="login-password" className={styles.label}>Senha</label>
-                <button type="button" className={styles.forgotLink}>
-                  Esqueceu a senha?
-                </button>
-              </div>
+              <label htmlFor="login-password" className={styles.label}>Senha</label>
               <input
                 id="login-password"
                 type="password"

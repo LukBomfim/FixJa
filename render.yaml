@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fixja-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FLASK_DEBUG
+        value: "0"
