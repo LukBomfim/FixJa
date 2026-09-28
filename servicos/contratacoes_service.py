@@ -26,7 +26,7 @@ def criar_contratacao_db(client_id:str,prestador_id:str,descricao:str,data_solic
         descricao=descricao,
         data=None,
         created_at=None,
-        status="INICIADO"
+        status="PENDENTE"
     )
     print(contratacao.data_solicitada)
     response = supabase_client.table("contratacoes").insert({ # type: ignore
@@ -68,7 +68,28 @@ def buscar_contratacao_por_user_id(id,tipo):
         contratacoes = buscar_contratacao_por_client_id(id)
     return contratacoes  
 
-def confirmar_contratacao(contratacao_id):
+
+def iniciar_contratacao(contratacao_id):
+    global supabase_client
+    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
+    if len(response.data) <= 0:
+        return False
+    data = response.data[0]  
+    contratacao = Contratacao(**data) # type: ignore
+    supabase_client.table("contratacoes").update({"status":"INICIADO"}).eq("id",contratacao.id).execute()
+    return False
+   
+def recusar_contratacao(contratacao_id):
+    global supabase_client
+    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
+    if len(response.data) <= 0:
+        return False
+    data = response.data[0]  
+    contratacao = Contratacao(**data) # type: ignore
+    supabase_client.table("contratacoes").update({"status":"RECUSADO"}).eq("id",contratacao.id).execute()
+    return False    
+
+def concluir_contratacao(contratacao_id):
     global supabase_client
     response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
     if len(response.data) <= 0:
@@ -86,4 +107,4 @@ def cancelado_contratacao(contratacao_id):
     data = response.data[0]  
     contratacao = Contratacao(**data) # type: ignore
     supabase_client.table("contratacoes").update({"status":"CANCELADO"}).eq("id",contratacao.id).execute()
-    return False    
+    return False

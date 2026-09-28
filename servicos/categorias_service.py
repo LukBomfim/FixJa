@@ -21,5 +21,7 @@ def buscar_todas_categorias():
     global supabase_client
     response = supabase_client.table("categorias").select("*").execute()
     data = response.data
-    categorias = [Categoria(**d).__dict__ for d in data]
+    categorias = [Categoria(**d) for d in data]
     return categorias
+
+print(buscar_todas_categorias())

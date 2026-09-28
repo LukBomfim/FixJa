@@ -23,5 +23,14 @@ def buscar_perfil_prestador(categoria=None,tamanho=10):
     else:
         response = supabase_client.table("profiles").select("*").eq("tipo","PRESTADOR").limit(tamanho).execute()    
     data = response.data
-    usuarios = [ Usuario(**d) for d in data]
+    usuarios = [Usuario(**d) for d in data]
     return usuarios    
+
+
+def buscar_perfil_por_id(id):
+    global supabase_client
+    response = supabase_client.table("profiles").select("*").eq("id",id).execute()    
+    data = response.data[0]
+    usuarios = Usuario(**data) 
+    return usuarios    
+
