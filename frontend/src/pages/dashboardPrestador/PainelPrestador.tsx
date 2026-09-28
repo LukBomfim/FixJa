@@ -7,6 +7,7 @@ interface Solicitation {
   service: string;
   description: string;
   time: string;
+  status: string;
 }
 
 const INITIAL_REQUESTS: Solicitation[] = [
@@ -16,6 +17,7 @@ const INITIAL_REQUESTS: Solicitation[] = [
     service: 'Instalação de chuveiro',
     description: 'Instalação de chuveiro elétrico no banheiro.',
     time: '10:30',
+    status: 'PENDENTE',
   },
   {
     id: 2,
@@ -23,6 +25,7 @@ const INITIAL_REQUESTS: Solicitation[] = [
     service: 'Troca de tomada',
     description: 'Troca de duas tomadas da sala.',
     time: '11:15',
+    status: 'PENDENTE',
   },
   {
     id: 3,
@@ -30,6 +33,7 @@ const INITIAL_REQUESTS: Solicitation[] = [
     service: 'Instalação de luminária',
     description: 'Instalação de luminária no quarto.',
     time: '12:00',
+    status: 'PENDENTE',
   },
 ];
 
@@ -37,11 +41,16 @@ export const DashboardPrestador: React.FC = () => {
  const [requests, setRequests] = useState<Solicitation[]>(() => {
   const savedRequests = localStorage.getItem('fixja_requests');
 
-  if (savedRequests) {
-    const newRequests = JSON.parse(savedRequests);
+ if (savedRequests) {
+  const newRequests = JSON.parse(savedRequests).map(
+    (request: Solicitation) => ({
+      ...request,
+      status: request.status || 'PENDENTE',
+    })
+  );
 
-    return [...INITIAL_REQUESTS, ...newRequests];
-  }
+  return [...INITIAL_REQUESTS, ...newRequests];
+}
 
   return INITIAL_REQUESTS;
 });
@@ -53,7 +62,7 @@ export const DashboardPrestador: React.FC = () => {
 
   const [status, setStatus] = useState('PENDENTE');
 
-  const handleAttend = (requestId: number) => {
+ const handleAttend = (requestId: number) => {
   const selectedRequest = requests.find(
     (request) => request.id === requestId
   );
@@ -62,26 +71,51 @@ export const DashboardPrestador: React.FC = () => {
     return;
   }
 
-  setRequests((currentQueue) =>
-    currentQueue.filter((request) => request.id !== requestId)
-  );
-
+  // Apenas seleciona o atendimento.
+  // A solicitação continua na fila.
   setCurrentService(selectedRequest);
-  setStatus('ACEITO');
+  setStatus(selectedRequest.status);
+};
 
-  console.log('Atendimento selecionado:', selectedRequest);
+const updateRequestStatus = (requestId: number, newStatus: string) => {
+  setRequests((currentRequests) =>
+    currentRequests.map((request) =>
+      request.id === requestId
+        ? { ...request, status: newStatus }
+        : request
+    )
+  );
 };
 
   const handleStartService = () => {
-    setStatus('EM ANDAMENTO');
-  };
+  if (!currentService) {
+    return;
+  }
+
+  setStatus('EM ANDAMENTO');
+
+  updateRequestStatus(
+    currentService.id,
+    'EM ANDAMENTO'
+  );
+};
+
 const handleUndoStatus = () => {
+  if (!currentService) {
+    return;
+  }
+
   if (status === 'CONCLUÍDO') {
     setStatus('EM ANDAMENTO');
 
+    updateRequestStatus(
+      currentService.id,
+      'EM ANDAMENTO'
+    );
+
     setFinishedServices((currentStack) =>
       currentStack.filter(
-        (service) => service.id !== currentService?.id
+        (service) => service.id !== currentService.id
       )
     );
 
@@ -90,12 +124,22 @@ const handleUndoStatus = () => {
 
   if (status === 'EM ANDAMENTO') {
     setStatus('ACEITO');
+
+    updateRequestStatus(
+      currentService.id,
+      'ACEITO'
+    );
+
     return;
   }
 
   if (status === 'ACEITO') {
     setStatus('PENDENTE');
-    return;
+
+    updateRequestStatus(
+      currentService.id,
+      'PENDENTE'
+    );
   }
 };
   const handleFinishService = () => {
@@ -105,6 +149,14 @@ const handleUndoStatus = () => {
 
   setStatus('CONCLUÍDO');
 
+  // Remove da fila somente quando o serviço é finalizado
+  setRequests((currentRequests) =>
+    currentRequests.filter(
+      (request) => request.id !== currentService.id
+    )
+  );
+
+  // Adiciona na pilha de atendimentos concluídos
   setFinishedServices((currentStack) => {
     const alreadyFinished = currentStack.some(
       (service) => service.id === currentService.id
@@ -114,7 +166,10 @@ const handleUndoStatus = () => {
       return currentStack;
     }
 
-    return [currentService, ...currentStack];
+    return [
+      { ...currentService, status: 'CONCLUÍDO' },
+      ...currentStack,
+    ];
   });
 };
 
@@ -227,6 +282,9 @@ const handleUndoStatus = () => {
                     <small>
                       Solicitação às {request.time}
                     </small>
+                    <span className={styles.requestStatus}>
+                      Status: {request.status}
+                    </span>
                   </div>
 
                   <button
@@ -346,6 +404,18 @@ const handleUndoStatus = () => {
                     ↩ Desfazer avanço
                   </button>
                 )}
+                {status === 'PENDENTE' && (
+  <button
+    type="button"
+    className={styles.primaryBtn}
+    onClick={() => {
+      setStatus('ACEITO');
+      updateRequestStatus(currentService.id, 'ACEITO');
+    }}
+  >
+    Aceitar serviço
+  </button>
+)}
                 {status === 'ACEITO' && (
                   <button
                     type="button"
