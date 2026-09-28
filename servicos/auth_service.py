@@ -68,19 +68,27 @@ def criar_perfil(user:Usuario,data_nascimento:str,telefone:str,tipo:str,categori
         print(f"Erro ao tentar criar perfil:{e}")
         return False    
     return usuario
-def logar_usuario(email:str,senha:str) -> Usuario | None:
+
+def logar_usuario(email: str, senha: str) -> tuple[Usuario, str] | None:
     """
-    Retorna uma Auth response se existir usuario e None caso não exista
+    Retorna (usuario, access_token) se as credenciais forem válidas, None caso contrário.
     """
-    global supabase_client
-    response:AuthResponse = supabase_client.auth.sign_in_with_password(
-        {
-            "email":email,
-            "password":senha
-        })
-    payload = supabase_client.table("profiles").select("*").eq("id",response.user.id).execute() # type: ignore
-    payload = payload.data[0]
-    usuario = Usuario(**payload,senha=None) # type: ignore
-    if not response.user:
+    try:
+        response = supabase_client.auth.sign_in_with_password(
+            {"email": email, "password": senha}
+        )
+    except AuthApiError:
         return None
-    return usuario
+
+    if not response.user or not response.session:
+        return None
+
+    payload = (
+        supabase_client.table("profiles")
+        .select("*")
+        .eq("id", response.user.id)
+        .single()
+        .execute()
+    )
+    usuario = Usuario(**payload.data, senha=None)
+    return usuario, response.session.access_token
