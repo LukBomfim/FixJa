@@ -10,15 +10,19 @@ def login():
         dados = request.get_json() or {}
         email = dados['email']
         senha = dados['senha']
-        user = logar_usuario(email, senha)
-        return jsonify(user.__dict__), 200
+
+        resultado = logar_usuario(email, senha)
+        if resultado is None:
+            return jsonify({"erro": "Email ou senha inválidos"}), 401
+
+        usuario, token = resultado
+        return jsonify({"usuario": usuario.__dict__, "token": token}), 200
 
     except KeyError as e:
         return jsonify({"erro": f"O campo {str(e)} é obrigatório!"}), 400
 
     except Exception as e:
-        return jsonify({"erro": str(e)}), 400
-
+        return jsonify({"erro": str(e)}), 500
 
 @auth_bp.route('/register', methods=['POST'])
 def registrar():
