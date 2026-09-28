@@ -46,6 +46,12 @@ def avaliar_perfil(user_id,contratacao_id,nota,comentario):
     response = supabase_client.table("avaliacoes").insert({
         "contratacao_id":contratacao_id,
         "nota":nota,
-        "comentario":comentario
+        "comentario":comentario,
+        "prestador_id":user_id
     }).execute()
     return True
+
+def buscar_avaliacao_por_id_prestador(user_id):
+    global supabase_client
+    response = supabase_client.table("avaliacoes").select("*").eq("prestador_id",user_id).execute()
+    return response.data
