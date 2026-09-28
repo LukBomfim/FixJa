@@ -23,5 +23,5 @@ def buscar_perfil_prestador(categoria=None,tamanho=10):
     else:
         response = supabase_client.table("profiles").select("*").eq("tipo","PRESTADOR").limit(tamanho).execute()    
     data = response.data
-    usuarios = [ Usuario(**d) for d in data]
+    usuarios = [Usuario(**d) for d in data]
     return usuarios    
