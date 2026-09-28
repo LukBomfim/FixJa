@@ -60,15 +60,12 @@ def buscar_contratacao_por_prestador_id(id):
     contratacao = Contratacao(**data) # type: ignore
     return contratacao
 
-def buscar_contratacoes_a_vencer():
+def confirmar_contratacao(contratacao_id):
     global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("data",datetime.now().date().isoformat()).execute()
-    if len(response.data) < 0:
-        return
-    data = response.data   
-    for c in data:
-        contratacao = Contratacao(**c) # type: ignore
-        if contratacao.data_solicitada < datetime.now() and contratacao.status != "VENCIDO":
-            supabase_client.table("contratacoes").update({"status":"VENCIDO"}).eq("id",contratacao.id).execute()
-            return True
+    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
+    if len(response.data) <= 0:
+        return False
+    data = response.data[0]  
+    contratacao = Contratacao(**data) # type: ignore
+    supabase_client.table("contratacoes").update({"status":"CONCLUIDO"}).eq("id",contratacao.id).execute()
     return False    
