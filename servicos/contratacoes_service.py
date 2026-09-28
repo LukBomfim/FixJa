@@ -69,42 +69,12 @@ def buscar_contratacao_por_user_id(id,tipo):
     return contratacoes  
 
 
-def iniciar_contratacao(contratacao_id):
+def atualizar_estado_contratacao(contratacao_id,estado):
     global supabase_client
     response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
     if len(response.data) <= 0:
         return False
     data = response.data[0]  
     contratacao = Contratacao(**data) # type: ignore
-    supabase_client.table("contratacoes").update({"status":"INICIADO"}).eq("id",contratacao.id).execute()
-    return False
-   
-def recusar_contratacao(contratacao_id):
-    global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
-    if len(response.data) <= 0:
-        return False
-    data = response.data[0]  
-    contratacao = Contratacao(**data) # type: ignore
-    supabase_client.table("contratacoes").update({"status":"RECUSADO"}).eq("id",contratacao.id).execute()
+    supabase_client.table("contratacoes").update({"status":estado}).eq("id",contratacao.id).execute()
     return False    
-
-def concluir_contratacao(contratacao_id):
-    global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
-    if len(response.data) <= 0:
-        return False
-    data = response.data[0]  
-    contratacao = Contratacao(**data) # type: ignore
-    supabase_client.table("contratacoes").update({"status":"CONCLUIDO"}).eq("id",contratacao.id).execute()
-    return False    
-
-def cancelado_contratacao(contratacao_id):
-    global supabase_client
-    response = supabase_client.table("contratacoes").select("*").eq("id",contratacao_id).execute()
-    if len(response.data) <= 0:
-        return False
-    data = response.data[0]  
-    contratacao = Contratacao(**data) # type: ignore
-    supabase_client.table("contratacoes").update({"status":"CANCELADO"}).eq("id",contratacao.id).execute()
-    return False

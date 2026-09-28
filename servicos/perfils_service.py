@@ -34,3 +34,21 @@ def buscar_perfil_por_id(id):
     usuarios = Usuario(**data) 
     return usuarios    
 
+def avaliar_perfil(user_id,contratacao_id,nota,comentario):
+    global supabase_client
+    user_response = supabase_client.table("profiles").select("*").eq("id",user_id).execute()
+    user_data = user_response.data[0]
+    usuario = Usuario(**user_data)
+    usuario.avaliacao = (usuario.avaliacao + nota)/2
+
+    supabase_client.table("profiles").update({"avaliacao": usuario.avaliacao}).eq("id",usuario.id).execute()
+
+    response = supabase_client.table("avaliacoes").insert({
+        "contratacao_id":contratacao_id,
+        "nota":nota,
+        "comentario":comentario
+    }).execute()
+    return True
+
+
+avaliar_perfil("3ba1adeb-3bfd-420f-b9e7-f8cd95f86084","6b97b210-fb5e-447e-8438-d8a8b6dc5d61",5,"muito foda")
