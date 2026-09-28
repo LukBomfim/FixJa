@@ -34,17 +34,58 @@ const MOCK_PROVIDERS: Provider[] = [
     rating: 4.7,
     avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop',
   },
+    {
+    id: '4',
+    name: 'João Silva',
+    email: 'joao.eletricista@gmail.com',
+    service: 'Eletricista',
+    phone: '(82) 99999-9999',
+    bio: 'Eletricista especializado em instalações residenciais, manutenção elétrica e troca de tomadas e luminárias.',
+    rating: 4.9,
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop',
+  },
 ];
 
 export const DashboardClient: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [serviceRequested, setServiceRequested] = useState(false);
 
   // filtro pelo serviço ou prestador
   const filteredProviders = MOCK_PROVIDERS.filter((p) =>
     p.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+    const handleRequestService = () => {
+  if (!selectedProvider) {
+    return;
+  }
+
+  const newRequest = {
+    id: Date.now(),
+    client: 'Cliente atual',
+    service: selectedProvider.service,
+    description: `Solicitação de ${selectedProvider.service.toLowerCase()}.`,
+    time: new Date().toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+  };
+
+  const existingRequests = JSON.parse(
+    localStorage.getItem('fixja_requests') || '[]'
+  );
+
+  localStorage.setItem(
+    'fixja_requests',
+    JSON.stringify([...existingRequests, newRequest])
+  );
+
+  setServiceRequested(true);
+
+  console.log('Solicitação adicionada à fila:', newRequest);
+};
 
   // exibir o perfil
   if (selectedProvider) {
@@ -84,6 +125,44 @@ export const DashboardClient: React.FC = () => {
               <strong>E-mail:</strong> {selectedProvider.email}
             </div>
           </div>
+
+            <div className={styles.requestBox}>
+            {!serviceRequested ? (
+              <>
+                <h3 className={styles.requestTitle}>
+                  Precisa desse serviço?
+                </h3>
+
+                <p className={styles.requestText}>
+                  Solicite um atendimento com {selectedProvider.name}.
+                </p>
+
+                <button
+                  type="button"
+                  className={styles.requestBtn}
+                  onClick={handleRequestService}
+                >
+                  Solicitar serviço
+                </button>
+              </>
+            ) : (
+              <div className={styles.successMessage}>
+                <div className={styles.successIcon}>✓</div>
+
+                <h3>Solicitação enviada!</h3>
+
+                <p>
+                  Seu pedido foi colocado na fila de atendimento de{' '}
+                  <strong>{selectedProvider.name}</strong>.
+                </p>
+
+                <span className={styles.queueBadge}>
+                  Status: PENDENTE
+                </span>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     );
