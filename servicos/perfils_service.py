@@ -20,8 +20,7 @@ def buscar_perfil_por_categoria(categoria,tamanho):
     global supabase_client
     response = supabase_client.table("profiles").select("*").eq("categoria",categoria).limit(tamanho).execute()
     data = response.data
-    usuarios = []
-    for d in data:
-        user = Usuario(**d)
-        usuarios.append(user.__dict__)
+    usuarios = [ Usuario(**d) for d in data]
     return usuarios    
+
+print(buscar_perfil_por_categoria("ELETRICISTA",1))
