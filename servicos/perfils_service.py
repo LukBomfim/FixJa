@@ -16,7 +16,7 @@ except:
 supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignore
 
 
-def buscar_perfil_por_categoria(categoria=None,tamanho=10):
+def buscar_perfil_prestador(categoria=None,tamanho=10):
     global supabase_client
     if categoria != None:
         response = supabase_client.table("profiles").select("*").eq("categoria",categoria).limit(tamanho).execute()
@@ -25,5 +25,3 @@ def buscar_perfil_por_categoria(categoria=None,tamanho=10):
     data = response.data
     usuarios = [ Usuario(**d) for d in data]
     return usuarios    
-
-print(buscar_perfil_por_categoria(categoria="ELETRICISTA"))
