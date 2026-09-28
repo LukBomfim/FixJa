@@ -27,12 +27,10 @@ def buscar_perfil_prestador(categoria=None,tamanho=10):
     return usuarios    
 
 
-def buscar_perfil_prestador_por_id(id):
+def buscar_perfil_por_id(id):
     global supabase_client
     response = supabase_client.table("profiles").select("*").eq("id",id).execute()    
     data = response.data[0]
     usuarios = Usuario(**data) 
     return usuarios    
 
-
-print(buscar_perfil_prestador_por_id("0626cef3-85dc-4e1e-85f6-1c376675b13f"))
