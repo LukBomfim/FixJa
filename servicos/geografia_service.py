@@ -1,4 +1,3 @@
-from base64 import b64encode
 from math import isfinite
 
 from algoritmos.grafo_geografico import (
@@ -9,7 +8,6 @@ from algoritmos.grafo_geografico import (
 )
 from algoritmos.ordenacao import quick_sort
 from auth.middleware import get_request_supabase_client
-from servicos.visualizacao_service import gerar_grafico_geografico
 
 LIMITE_PRESTADORES_GEO = 200
 
@@ -62,6 +60,8 @@ def recomendar_prestadores(latitude, longitude, cidade=None, estado=None):
                 "cidade": perfil.get("cidade") or "",
                 "estado": perfil.get("estado"),
                 "avaliacao": perfil.get("avaliacao") or 0,
+                "latitude": float(perfil["latitude"]),
+                "longitude": float(perfil["longitude"]),
             },
             "distancia_km": distancia,
             "caminho": reconstruir_caminho(anteriores, destino),
@@ -72,7 +72,6 @@ def recomendar_prestadores(latitude, longitude, cidade=None, estado=None):
         key=lambda item: (item["distancia_km"], item["prestador"]["id"]),
     )
     caminho_destaque = recomendacoes[0]["caminho"] if recomendacoes else []
-    imagem = gerar_grafico_geografico(vertices, grafo, caminho_destaque)
     return {
         "prestadores": [
             {
@@ -81,7 +80,6 @@ def recomendar_prestadores(latitude, longitude, cidade=None, estado=None):
             }
             for item in recomendacoes
         ],
-        "grafo_png_base64": b64encode(imagem).decode("ascii"),
         "quantidade_vertices": len(vertices),
         "quantidade_arestas": sum(len(arestas) for arestas in grafo.values()) // 2,
     }

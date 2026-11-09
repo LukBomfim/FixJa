@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Check, LocateFixed, MapPinned } from 'lucide-react';
 import styles from './LocationPicker.module.css';
+import { CircleMarker, MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 export interface LocationValue {
   estado: string;
@@ -14,6 +17,15 @@ interface LocationPickerProps {
   onChange: (value: LocationValue) => void;
   onConfirmedChange?: (confirmed: boolean) => void;
   showAddress?: boolean;
+}
+
+function LocationClickHandler({ onSelect }: { onSelect: (latitude: number, longitude: number) => void }) {
+  useMapEvents({
+    click(event) {
+      onSelect(event.latlng.lat, event.latlng.lng);
+    },
+  });
+  return null;
 }
 
 const STATES = [
@@ -36,9 +48,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
   const hasCoordinates = value.latitude.trim() !== '' && value.longitude.trim() !== ''
     && Number.isFinite(latitude) && Number.isFinite(longitude)
     && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
-  const mapUrl = hasCoordinates
-    ? `https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`
-    : '';
   const searchUrl = useMemo(() => {
     const query = [value.endereco, value.cidade, value.estado].filter(Boolean).join(', ');
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || 'Brasil')}`;
@@ -137,8 +146,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
       {citiesError && <p className={styles.hint} role="status">{citiesError}</p>}
 
       <div className={styles.locationActions}>
-        <button type="button" onClick={useDeviceLocation}>Usar localização do dispositivo</button>
-        <a href={searchUrl} target="_blank" rel="noreferrer">Pesquisar ou escolher no Google Maps</a>
+        <button type="button" onClick={useDeviceLocation}><LocateFixed size={16} aria-hidden="true" /> Usar localização do dispositivo</button>
+        <a href={searchUrl} target="_blank" rel="noreferrer"><MapPinned size={16} aria-hidden="true" /> Pesquisar no Google Maps</a>
       </div>
       <p className={styles.hint}>A busca do mapa abre em outra aba. Informe as coordenadas exatas do ponto escolhido abaixo.</p>
       <div className={styles.locationFields}>
@@ -173,18 +182,22 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
         disabled={!hasCoordinates}
         onClick={() => { setLocationError(''); setConfirmed(true); onConfirmedChange?.(true); }}
       >
-        Confirmar localização selecionada
+        <Check size={16} aria-hidden="true" /> Confirmar localização selecionada
       </button>
-      {confirmed && <p className={styles.confirmed} role="status">Localização confirmada.</p>}
+      {confirmed && <p className={styles.confirmed} role="status"><Check size={15} aria-hidden="true" /> Localização confirmada. Altere as coordenadas para ajustar o ponto.</p>}
       {locationError && <p className={styles.error} role="alert">{locationError}</p>}
-      {hasCoordinates && (
-        <iframe
-          className={styles.map}
-          title="Mapa Google da localização selecionada"
-          src={mapUrl}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
+      {hasCoordinates && !confirmed && (
+        <div className={styles.mapFrame}>
+          <MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className={styles.map}>
+            <LocationClickHandler onSelect={(lat, lng) => update({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) })} />
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <CircleMarker center={[latitude, longitude]} radius={10} pathOptions={{ color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.95 }} />
+          </MapContainer>
+          <p className={styles.mapHint}>Clique no mapa para ajustar a posição do marcador.</p>
+        </div>
       )}
     </fieldset>
   );

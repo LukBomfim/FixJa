@@ -56,5 +56,5 @@ def comparar_ordenacoes(prestadores):
         "criterio": "avaliação decrescente; id crescente para desempate",
         "registros_disponiveis": quantidade,
         "cenarios": cenarios,
-        "grafico_png_base64": b64encode(imagem).decode("ascii"),
+        "grafico_png_base64": b64encode(imagem).decode("ascii") if imagem else "",
     }

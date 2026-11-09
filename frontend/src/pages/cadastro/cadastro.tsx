@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './cadastro.module.css';
 import { api, errorMessage, session } from '../../services/api';
 import type { AccountType, Category } from '../../services/api';
@@ -10,7 +11,7 @@ export interface RegistrationDraft {
 }
 
 interface RegisterProps {
-  onRegisterSuccess?: (token: string, draft: RegistrationDraft) => void;
+  onRegisterSuccess?: (token: string, refreshToken: string, draft: RegistrationDraft) => void;
   onNavigateToLogin?: () => void;
 }
 
@@ -26,6 +27,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProvider, setIsProvider] = useState(false);
   const [selectedService, setSelectedService] = useState<string>('');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -80,8 +82,12 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
         setConfirmationMessage('Conta criada. Confirme seu e-mail e entre para concluir o perfil.');
         return;
       }
-      session.setToken(result.token);
-      onRegisterSuccess?.(result.token, {
+      if (!result.refresh_token) {
+        setConfirmationMessage('Conta criada. Confirme seu e-mail e entre para concluir o perfil.');
+        return;
+      }
+      session.setCredentials(result.token, result.refresh_token);
+      onRegisterSuccess?.(result.token, result.refresh_token, {
         username: name.trim(),
         tipo: isProvider ? 'PRESTADOR' : 'CLIENTE',
         categoria: isProvider ? selectedService : null,
@@ -147,17 +153,28 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
             {/* Senha */}
             <div className={styles.inputField}>
               <label htmlFor="reg-password" className={styles.label}>Senha</label>
-              <input
-                id="reg-password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-                }}
-                className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-              />
+              <div className={styles.passwordInput}>
+                <input
+                  id="reg-password"
+                  type={passwordVisible ? 'text' : 'password'}
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setPasswordVisible((visible) => !visible)}
+                  aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={passwordVisible}
+                >
+                  {passwordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
+              </div>
               {errors.password && <span className={styles.errorMessage}> {errors.password}</span>}
             </div>
 

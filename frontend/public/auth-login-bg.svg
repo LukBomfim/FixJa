@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="427" y1="83" x2="832" y2="814" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCEBFF"/>
+      <stop offset="1" stop-color="#FCE7D8"/>
+    </linearGradient>
+    <linearGradient id="house" x1="440" y1="359" x2="746" y2="713" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5B084"/>
+      <stop offset="1" stop-color="#E47B55"/>
+    </linearGradient>
+  </defs>
+  <path d="M398 118c137-79 315-34 426 36 109 70 290 73 249 231-40 149-119 223-263 279-143 55-324 53-443-20-125-76-223-168-170-314 33-94 101-164 201-212Z" fill="url(#sky)"/>
+  <circle cx="727" cy="228" r="67" fill="#F6C66D" fill-opacity=".72"/>
+  <path d="m435 466 187-153 188 153v206H435V466Z" fill="url(#house)"/>
+  <path d="m406 471 216-178 217 178" stroke="#17345F" stroke-linecap="round" stroke-linejoin="round" stroke-width="23"/>
+  <path d="M560 672V531c0-35 28-63 63-63s63 28 63 63v141" fill="#FFF8F1"/>
+  <path d="M506 517h37v48h-37zm208 0h37v48h-37z" fill="#FFF8F1"/>
+  <path d="M623 464v-71h77" stroke="#17345F" stroke-linecap="round" stroke-linejoin="round" stroke-width="15"/>
+  <path d="M700 393h57" stroke="#17345F" stroke-linecap="round" stroke-width="15"/>
+  <circle cx="393" cy="640" r="42" fill="#8BB9A5"/>
+  <circle cx="819" cy="640" r="52" fill="#8BB9A5"/>
+  <path d="M374 672h39m386 0h48" stroke="#17345F" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="391" cy="269" r="12" fill="#6C92C7"/>
+  <circle cx="834" cy="392" r="14" fill="#E38A63"/>
+</svg>

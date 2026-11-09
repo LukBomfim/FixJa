@@ -1,7 +1,34 @@
 .application {
+  position: relative;
   min-height: 100vh;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: inherit;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.themeToggle {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  z-index: 20;
+  padding: 0.5rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.application[data-theme='dark'] .themeToggle {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .topbar {
@@ -11,15 +38,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .brand {
   border: 0;
   padding: 0;
   background: none;
-  color: #122c64;
+  color: var(--color-accent);
   font-size: 1.35rem;
   font-weight: 800;
   cursor: pointer;
@@ -32,10 +59,13 @@
 }
 
 .navButton {
-  border: 1px solid #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #1e293b;
+  background: var(--color-surface);
+  color: var(--color-text);
   padding: 0.55rem 0.85rem;
   font-size: 0.875rem;
   font-weight: 600;
@@ -43,12 +73,39 @@
 }
 
 .navButton:hover {
-  border-color: #2563eb;
-  color: #2563eb;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.navButton[aria-current='page'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.navButton:focus-visible,
+.themeToggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+  outline-offset: 2px;
 }
 
 .content {
   min-height: calc(100vh - 64px);
+}
+
+.content > * {
+  animation: pageEnter 280ms ease-out both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .messagePage {
@@ -59,8 +116,14 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   padding: 1.5rem;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-canvas);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content > * {
+    animation: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -70,9 +133,12 @@
 
   .navigation {
     gap: 0.3rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .navButton {
     padding: 0.5rem 0.6rem;
+    font-size: 0.75rem;
   }
 }

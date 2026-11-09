@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './Login.module.css';
 import { ApiError, api, errorMessage, session } from '../../services/api';
 import type { UserProfile } from '../../services/api';
@@ -17,6 +18,7 @@ interface FormErrors {
 const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -44,7 +46,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
 
     try {
       const result = await api.login(email, password);
-      session.setToken(result.token);
+      session.setCredentials(result.token, result.refresh_token);
       let profile = result.usuario;
       if (!profile) {
         try {
@@ -97,17 +99,28 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
             {/* Senha */}
             <div className={styles.inputField}>
               <label htmlFor="login-password" className={styles.label}>Senha</label>
-              <input
-                id="login-password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-                }}
-                className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-              />
+              <div className={styles.passwordInput}>
+                <input
+                  id="login-password"
+                  type={passwordVisible ? 'text' : 'password'}
+                  placeholder="Digite sua senha"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setPasswordVisible((visible) => !visible)}
+                  aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={passwordVisible}
+                >
+                  {passwordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
+              </div>
               {errors.password && <span className={styles.errorMessage}> {errors.password}</span>}
             </div>
 

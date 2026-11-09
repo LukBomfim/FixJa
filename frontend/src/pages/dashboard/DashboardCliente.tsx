@@ -1,11 +1,15 @@
     import React, { useEffect, useState } from 'react';
+    import { BriefcaseBusiness, MapPin, MessageSquare, Route, Star, UserRound } from 'lucide-react';
     import styles from './DashboardCliente.module.css';
     import { api, errorMessage } from '../../services/api';
     import type { Category, Contract, ContractStatus, NearbyRecommendation, Provider, Review, UserProfile } from '../../services/api';
     import LocationPicker, { type LocationValue } from '../../components/LocationPicker';
+    import ProviderMap from '../../components/ProviderMap';
+    import Avatar from '../../components/ui/Avatar';
 
     interface DashboardClientProps {
       profile: UserProfile;
+      onOpenChat: (providerId?: string) => void;
     }
 
     const STATUS_LABELS: Record<ContractStatus, string> = {
@@ -16,7 +20,7 @@
       recusado: 'Recusado',
     };
 
-    export const DashboardClient: React.FC<DashboardClientProps> = ({ profile }) => {
+    export const DashboardClient: React.FC<DashboardClientProps> = ({ profile, onOpenChat }) => {
       const [providers, setProviders] = useState<Provider[]>([]);
       const [categories, setCategories] = useState<Category[]>([]);
       const [contracts, setContracts] = useState<Contract[]>([]);
@@ -46,7 +50,7 @@
       });
       const [locationConfirmed, setLocationConfirmed] = useState(false);
       const [nearbyProviders, setNearbyProviders] = useState<NearbyRecommendation[]>([]);
-      const [nearbyGraph, setNearbyGraph] = useState('');
+      const [selectedNearbyProviderId, setSelectedNearbyProviderId] = useState<string | null>(null);
       const [nearbyLoading, setNearbyLoading] = useState(false);
       const [nearbySearched, setNearbySearched] = useState(false);
       const [nearbyError, setNearbyError] = useState('');
@@ -131,14 +135,22 @@
             estado: location.estado || undefined,
           });
           setNearbyProviders(result.prestadores);
-          setNearbyGraph(result.grafo_png_base64);
+          setSelectedNearbyProviderId(result.prestadores[0]?.prestador.id || null);
         } catch (requestError) {
           setNearbyError(errorMessage(requestError));
           setNearbyProviders([]);
-          setNearbyGraph('');
         } finally {
           setNearbyLoading(false);
         }
+      };
+
+      const handleLocationChange = (nextLocation: LocationValue) => {
+        setLocation(nextLocation);
+        setLocationConfirmed(false);
+        setNearbyProviders([]);
+        setSelectedNearbyProviderId(null);
+        setNearbySearched(false);
+        setNearbyError('');
       };
 
       const handleOpenProvider = async (id: string) => {
@@ -215,11 +227,11 @@
                 Voltar para a lista
               </button>
               <div className={styles.profileHeader}>
-                <div className={styles.profileAvatar} aria-hidden="true">{selectedProvider.username.slice(0, 1).toLocaleUpperCase()}</div>
+                <Avatar name={selectedProvider.username} className={styles.profileAvatar} />
                 <div>
                   <h2 className={styles.title}>{selectedProvider.username}</h2>
                   <span className={styles.serviceBadge}>{selectedProvider.categoria || 'Prestador'}</span>
-                  <p className={styles.providerLocation}>{selectedProvider.cidade}</p>
+                  <p className={styles.providerLocation}><MapPin size={15} aria-hidden="true" /> {selectedProvider.cidade}</p>
                 </div>
               </div>
               <p className={styles.subtitle}>{selectedProvider.descricao || 'Este prestador ainda não adicionou uma descrição.'}</p>
@@ -236,6 +248,13 @@
                   </div>
                 ))}
               </div>
+              <button
+                type="button"
+                className={styles.viewProfileBtn}
+                onClick={() => onOpenChat(selectedProvider.id)}
+              >
+                <MessageSquare size={16} aria-hidden="true" /> Conversar com {selectedProvider.username}
+              </button>
               <div className={styles.contactBox}>
                 <h3 className={styles.contactTitle}>Informações de contato</h3>
                 <div className={styles.contactItem}><strong>Telefone:</strong> {selectedProvider.telefone || 'Não informado'}</div>
@@ -282,7 +301,7 @@
                 <form onSubmit={handleNearbySearch}>
                   <LocationPicker
                     value={location}
-                    onChange={setLocation}
+                    onChange={handleLocationChange}
                     onConfirmedChange={setLocationConfirmed}
                     showAddress={false}
                   />
@@ -297,19 +316,38 @@
                 )}
                 {!nearbyLoading && nearbyProviders.length > 0 && (
                   <>
+                    {locationConfirmed && (
+                      <ProviderMap
+                        latitude={Number(location.latitude)}
+                        longitude={Number(location.longitude)}
+                        providers={nearbyProviders}
+                        selectedProviderId={selectedNearbyProviderId}
+                        onSelect={setSelectedNearbyProviderId}
+                      />
+                    )}
                     <div className={styles.nearbyGrid}>
                       {nearbyProviders.map(({ prestador, distancia_km }) => (
-                        <article key={prestador.id} className={styles.nearbyCard}>
+                        <article
+                          key={prestador.id}
+                          className={`${styles.nearbyCard} ${selectedNearbyProviderId === prestador.id ? styles.nearbySelected : ''}`}
+                        >
                           <div>
                             <strong>{prestador.username}</strong>
-                            <p>{prestador.categoria || 'Prestador'} · {prestador.cidade}{prestador.estado ? ` - ${prestador.estado}` : ''}</p>
-                            <small>{distancia_km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km aproximados</small>
+                            <p><BriefcaseBusiness size={14} aria-hidden="true" /> {prestador.categoria || 'Prestador'} · {prestador.cidade}{prestador.estado ? ` - ${prestador.estado}` : ''}</p>
+                            <small><Route size={14} aria-hidden="true" /> {distancia_km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km aproximados</small>
                           </div>
-                          <button type="button" className={styles.viewProfileBtn} onClick={() => void handleOpenProvider(prestador.id)}>Ver perfil</button>
+                          <button
+                            type="button"
+                            className={styles.selectNearby}
+                            aria-pressed={selectedNearbyProviderId === prestador.id}
+                            onClick={() => setSelectedNearbyProviderId(prestador.id)}
+                          >
+                            <MapPin size={15} aria-hidden="true" /> {selectedNearbyProviderId === prestador.id ? 'Selecionado no mapa' : 'Mostrar no mapa'}
+                          </button>
+                          <button type="button" className={styles.viewProfileBtn} onClick={() => void handleOpenProvider(prestador.id)}><UserRound size={16} aria-hidden="true" /> Ver perfil</button>
                         </article>
                       ))}
                     </div>
-                    {nearbyGraph && <img className={styles.graphImage} src={`data:image/png;base64,${nearbyGraph}`} alt="Grafo geográfico real, com conexões ponderadas e menor caminho calculado" />}
                   </>
                 )}
               </section>
@@ -330,11 +368,11 @@
                     <article key={provider.id} className={styles.card}>
                       <div>
                         <div className={styles.cardHeader}>
-                          <div className={styles.avatar} aria-hidden="true">{provider.username.slice(0, 1).toLocaleUpperCase()}</div>
+                          <Avatar name={provider.username} className={styles.avatar} />
                           <div><h2 className={styles.providerName}>{provider.username}</h2><p className={styles.providerLocation}>{provider.cidade}</p></div>
                         </div>
-                        <span className={styles.serviceBadge}>{provider.categoria || 'Prestador'}</span>
-                        <p className={styles.providerRating}>Avaliação: {Number(provider.avaliacao || 0).toFixed(1)}</p>
+                        <span className={styles.serviceBadge}><BriefcaseBusiness size={14} aria-hidden="true" /> {provider.categoria || 'Prestador'}</span>
+                        <p className={styles.providerRating}><Star size={15} aria-hidden="true" /> Avaliação: {Number(provider.avaliacao || 0).toFixed(1)}</p>
                       </div>
                       <button type="button" className={styles.viewProfileBtn} onClick={() => void handleOpenProvider(provider.id)}>Ver perfil</button>
                     </article>

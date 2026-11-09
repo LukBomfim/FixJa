@@ -2,11 +2,12 @@ import os
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from supabase import AuthApiError
 
 os.environ.setdefault("SUPABASE_URL", "https://unit-test.supabase.co")
 os.environ.setdefault("SUPABASE_KEY", "unit-test-key")
 
-from servicos.auth_service import registrar_usuario
+from servicos.auth_service import registrar_usuario, renovar_sessao
 from servicos.perfils_service import _prestador_publico, criar_perfil
 
 
@@ -16,20 +17,41 @@ class SupabaseAuthHashTests(unittest.TestCase):
         auth = Mock()
         auth.sign_up.return_value = SimpleNamespace(
             user=SimpleNamespace(id="auth-user"),
-            session=None,
+            session=SimpleNamespace(access_token="access-token", refresh_token="refresh-token"),
         )
         create_client.return_value.auth = auth
 
         result = registrar_usuario("person@example.test", "long-test-password", "Pessoa")
 
         self.assertIsNotNone(result)
-        user, token = result
+        user, token, refresh_token = result
         self.assertEqual(user.senha, "")
-        self.assertIsNone(token)
+        self.assertEqual(token, "access-token")
+        self.assertEqual(refresh_token, "refresh-token")
         auth.sign_up.assert_called_once_with({
             "email": "person@example.test",
             "password": "long-test-password",
         })
+
+    @patch("servicos.auth_service.create_client")
+    def test_refresh_rotates_session_tokens(self, create_client):
+        auth = Mock()
+        auth.refresh_session.return_value = SimpleNamespace(
+            session=SimpleNamespace(access_token="next-access", refresh_token="next-refresh"),
+        )
+        create_client.return_value.auth = auth
+
+        self.assertEqual(renovar_sessao("current-refresh"), ("next-access", "next-refresh"))
+        auth.refresh_session.assert_called_once_with("current-refresh")
+
+    @patch("servicos.auth_service.create_client")
+    def test_refresh_provider_outage_is_not_treated_as_an_expired_session(self, create_client):
+        auth = Mock()
+        auth.refresh_session.side_effect = AuthApiError("temporarily unavailable", 500, None)
+        create_client.return_value.auth = auth
+
+        with self.assertRaises(AuthApiError):
+            renovar_sessao("current-refresh")
 
     @patch("servicos.perfils_service.get_request_supabase_client")
     def test_profile_table_never_receives_password(self, get_client):

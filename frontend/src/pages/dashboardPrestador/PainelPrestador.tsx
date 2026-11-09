@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { BriefcaseBusiness, Circle, Layers3, List, ListOrdered, MessageSquare, Star } from 'lucide-react';
 import styles from './DashboardPrestador.module.css';
 import { api, errorMessage } from '../../services/api';
-import type { BenchmarkResult, Contract, ContractStatus, UserProfile } from '../../services/api';
+import type { Contract, ContractStatus, UserProfile } from '../../services/api';
 import { LinkedList, Stack } from '../../dataStructures';
+import Avatar from '../../components/ui/Avatar';
 
 interface DashboardPrestadorProps {
   profile: UserProfile;
+  onOpenChat: () => void;
 }
 
 const STATUS_LABELS: Record<ContractStatus, string> = {
@@ -26,12 +29,9 @@ interface ProviderAction {
   createdAt: string;
 }
 
-export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile }) => {
+export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile, onOpenChat }) => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [actionHistory, setActionHistory] = useState<ProviderAction[]>([]);
-  const [benchmark, setBenchmark] = useState<BenchmarkResult | null>(null);
-  const [benchmarkLoading, setBenchmarkLoading] = useState(true);
-  const [benchmarkError, setBenchmarkError] = useState('');
   const [currentContract, setCurrentContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -53,15 +53,6 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
       })
       .catch((requestError: unknown) => { if (active) setError(errorMessage(requestError)); })
       .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    api.benchmark()
-      .then((result) => { if (active) setBenchmark(result); })
-      .catch((requestError: unknown) => { if (active) setBenchmarkError(errorMessage(requestError)); })
-      .finally(() => { if (active) setBenchmarkLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -114,7 +105,7 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
           <p className={styles.subtitle}>Gerencie suas solicitações de serviço.</p>
         </div>
         <div className={styles.providerProfile}>
-          <div className={styles.avatar} aria-hidden="true">{profile.username.slice(0, 1).toLocaleUpperCase()}</div>
+          <Avatar name={profile.username} className={styles.avatar} />
           <div><strong>{profile.username}</strong><span>{profile.categoria || 'Prestador'}</span></div>
         </div>
       </header>
@@ -122,16 +113,20 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
       {error && <p className={styles.errorMessage} role="alert">{error}</p>}
 
       <section className={styles.stats}>
-        <div className={styles.statCard}><span className={styles.statIcon}>Fila</span><div><strong>{pendingContracts.length}</strong><span>Solicitações pendentes</span></div></div>
-        <div className={styles.statCard}><span className={styles.statIcon}>Ativo</span><div><strong>{activeContracts.length}</strong><span>Em atendimento</span></div></div>
-        <div className={styles.statCard}><span className={styles.statIcon}>Média</span><div><strong>{Number(profile.avaliacao || 0).toFixed(1)}</strong><span>Avaliação</span></div></div>
+        <div className={styles.statCard}><span className={styles.statIcon}><ListOrdered size={21} aria-hidden="true" /></span><div><strong>{pendingContracts.length}</strong><span>Solicitações pendentes</span></div></div>
+        <div className={styles.statCard}><span className={styles.statIcon}><BriefcaseBusiness size={21} aria-hidden="true" /></span><div><strong>{activeContracts.length}</strong><span>Em atendimento</span></div></div>
+        <div className={styles.statCard}><span className={styles.statIcon}><Star size={21} aria-hidden="true" /></span><div><strong>{Number(profile.avaliacao || 0).toFixed(1)}</strong><span>Avaliação</span></div></div>
       </section>
+      <div className={styles.dashboardShortcuts}>
+        <button type="button" className={styles.shortcutButton} onClick={onOpenChat}><MessageSquare size={17} aria-hidden="true" /> Abrir mensagens</button>
+        <span className={styles.historyHint}>Veja solicitações, atendimentos e conversas com clientes.</span>
+      </div>
 
       <div className={styles.contentGrid}>
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <div><h2>Solicitações pendentes</h2><p>Fila de atendimento</p></div>
-            <span className={styles.fifoBadge}>FILA</span>
+            <span className={styles.fifoBadge} aria-label="Ordem de chegada"><ListOrdered size={16} aria-hidden="true" /></span>
           </div>
           {loading ? <p className={styles.empty}>Carregando solicitações...</p> : pendingContracts.length === 0 ? (
             <div className={styles.empty}><p>Não há solicitações pendentes.</p></div>
@@ -202,7 +197,7 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
           ) : (
             <div className={styles.currentService}>
               <div className={styles.currentClient}>
-                <div className={styles.clientAvatar}>{(currentContract.cliente_nome || 'C').slice(0, 1).toLocaleUpperCase()}</div>
+                <Avatar name={currentContract.cliente_nome} className={styles.clientAvatar} />
                 <div><strong>Cliente: {currentContract.cliente_nome || 'Nome indisponível'}</strong><span>{profile.categoria || 'Serviço'}</span></div>
               </div>
               <p>{currentContract.descricao}</p>
@@ -229,7 +224,7 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
         </section>
 
         <section className={styles.section}>
-          <div className={styles.sectionHeader}><div><h2>Atendimentos finalizados</h2><p>Histórico de contratações</p></div><span className={styles.stackBadge}>LISTA</span></div>
+          <div className={styles.sectionHeader}><div><h2>Atendimentos finalizados</h2><p>Histórico de contratações</p></div><span className={styles.stackBadge} aria-label="Lista de atendimentos"><List size={16} aria-hidden="true" /></span></div>
           {finishedContracts.length === 0 ? (
             <div className={styles.noService}><p>Nenhum atendimento finalizado.</p></div>
           ) : (
@@ -252,8 +247,8 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
 
       <section className={styles.section} aria-labelledby="action-stack-heading">
         <div className={styles.sectionHeader}>
-          <div><h2 id="action-stack-heading">Ações recentes (pilha LIFO)</h2><p>Ações confirmadas pela API nesta sessão, da mais recente para a mais antiga.</p></div>
-          <span className={styles.stackBadge}>{actionsStack.peek() ? 'TOPO' : 'VAZIA'}</span>
+          <div><h2 id="action-stack-heading">Histórico de ações</h2></div>
+          <span className={styles.stackBadge} aria-label={actionsStack.peek() ? 'Pilha com ações' : 'Pilha vazia'}>{actionsStack.peek() ? <Layers3 size={16} aria-hidden="true" /> : <Circle size={16} aria-hidden="true" />}</span>
         </div>
         {actionsStack.peek() ? (
           <>
@@ -281,45 +276,13 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
                 return stack.toArrayNewestFirst().reverse();
               })}
             >
-              Remover ação do topo (somente nesta tela)
+              Ocultar registro
             </button>
-            <p className={styles.historyHint}>A remoção altera apenas esta pilha local; não desfaz a mudança já salva no servidor.</p>
+            <p className={styles.historyHint}>Isso não altera o status da contratação.</p>
           </>
         ) : <p className={styles.empty}>As próximas ações de status confirmadas serão registradas aqui.</p>}
       </section>
 
-      <section className={styles.section} aria-labelledby="sorting-benchmark-heading">
-        <div className={styles.sectionHeader}>
-          <div><h2 id="sorting-benchmark-heading">Benchmark de ordenação</h2><p>Execução com avaliações reais de prestadores cadastrados; nenhuma amostra é inventada.</p></div>
-        </div>
-        {benchmarkLoading ? <p className={styles.empty} role="status">Executando benchmark...</p> : benchmarkError ? (
-          <p className={styles.errorMessage} role="alert">{benchmarkError}</p>
-        ) : benchmark && benchmark.registros_disponiveis === 0 ? (
-          <p className={styles.empty}>Não há prestadores cadastrados para comparar os algoritmos.</p>
-        ) : benchmark ? (
-          <>
-            <p className={styles.historyHint}>
-              {benchmark.registros_disponiveis} prestador(es) disponíveis · critério: {benchmark.criterio}.
-            </p>
-            {benchmark.cenarios.map((scenario) => (
-              <div key={scenario.quantidade} className={styles.benchmarkScenario}>
-                <h3>{scenario.quantidade} registro(s) — mais rápido: {scenario.mais_rapido}</h3>
-                <div className={styles.benchmarkTable} role="table" aria-label={`Medições com ${scenario.quantidade} registros`}>
-                  <div className={styles.benchmarkRow} role="row">
-                    <strong>Algoritmo</strong><strong>Tempo (ms)</strong><strong>Comparações</strong><strong>Trocas</strong><strong>Movimentações</strong>
-                  </div>
-                  {scenario.resultados.map((result) => (
-                    <div className={styles.benchmarkRow} role="row" key={result.algoritmo}>
-                      <span>{result.algoritmo}</span><span>{result.tempo_ms}</span><span>{result.comparacoes}</span><span>{result.trocas}</span><span>{result.movimentacoes}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <img className={styles.benchmarkImage} src={`data:image/png;base64,${benchmark.grafico_png_base64}`} alt="Gráfico Matplotlib de tempo medido para os quatro algoritmos de ordenação" />
-          </>
-        ) : null}
-      </section>
     </div>
   );
 };

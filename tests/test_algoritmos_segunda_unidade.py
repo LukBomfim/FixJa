@@ -81,9 +81,8 @@ class GeographicGraphTests(unittest.TestCase):
         self.assertAlmostEqual(distances["c"], distancia_haversine(0, 0, 0, 3), delta=0.01)
         self.assertEqual(reconstruir_caminho(previous, "c"), ["origin", "a", "b", "c"])
 
-    @patch("servicos.geografia_service.gerar_grafico_geografico", return_value=b"png")
     @patch("servicos.geografia_service.buscar_prestadores_com_coordenadas")
-    def test_recommendations_use_graph_distances_and_real_provider_records(self, find_providers, render):
+    def test_recommendations_use_graph_distances_and_real_provider_records(self, find_providers):
         find_providers.return_value = [
             {"id": "far", "username": "Mais distante", "latitude": 0.0, "longitude": 2.0},
             {"id": "near", "username": "Mais perto", "latitude": 0.0, "longitude": 1.0},
@@ -93,9 +92,11 @@ class GeographicGraphTests(unittest.TestCase):
 
         self.assertEqual([item["prestador"]["id"] for item in result["prestadores"]], ["near", "far"])
         self.assertAlmostEqual(result["prestadores"][0]["distancia_km"], 111.2, delta=0.1)
+        self.assertEqual(result["prestadores"][0]["prestador"]["latitude"], 0.0)
+        self.assertEqual(result["prestadores"][0]["prestador"]["longitude"], 1.0)
         self.assertEqual(result["quantidade_vertices"], 3)
         self.assertEqual(result["quantidade_arestas"], 3)
-        render.assert_called_once()
+        self.assertNotIn("grafo_png_base64", result)
 
 
 class BenchmarkTests(unittest.TestCase):
@@ -169,6 +170,8 @@ class GeographicRouteTests(unittest.TestCase):
     def test_new_endpoints_require_authentication(self):
         self.assertEqual(self.client.post("/prestadores/proximos", json={}).status_code, 401)
         self.assertEqual(self.client.get("/analises/benchmark").status_code, 401)
+        self.assertEqual(self.client.get("/dev/benchmark").status_code, 401)
+        self.assertEqual(self.client.get("/conversas").status_code, 401)
 
 
 if __name__ == "__main__":

@@ -1,19 +1,31 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
-  font-family: 'Inter', -apple-system, sans-serif;
-  color: #0f172a;
+  padding: 2.5rem 1.5rem;
+  color: var(--color-text);
 }
 
 .header {
   margin-bottom: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background-color: var(--color-surface);
+  background-image:
+    linear-gradient(90deg, var(--color-surface) 0%, var(--color-surface) 42%, transparent 100%),
+    url('/dashboard-client-bg.svg');
+  background-repeat: no-repeat;
+  background-position: center, right center;
+  background-size: 100% 100%, auto 185%;
+  box-shadow: 0 12px 30px rgb(var(--color-shadow) / 6%);
+  animation: dashboardEnter 420ms ease-out both;
 }
 
 .title {
   font-size: 1.875rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--color-text);
   margin-bottom: 0.5rem;
 }
 
@@ -50,8 +62,8 @@
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
@@ -86,7 +98,7 @@
 }
 
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
 }
 
@@ -105,10 +117,8 @@
   place-items: center;
   border-radius: 50%;
   object-fit: cover;
-  background-color: #e2e8f0;
-  color: #2563eb;
-  font-size: 1.25rem;
-  font-weight: 700;
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
   line-height: 1;
 }
 
@@ -119,7 +129,9 @@
 }
 
 .serviceBadge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   align-self: flex-start;
   background-color: #eff6ff;
   color: #2563eb;
@@ -131,6 +143,10 @@
 }
 
 .viewProfileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   width: 100%;
   padding: 0.75rem;
   background-color: #2563eb;
@@ -285,6 +301,24 @@
   font-size: 0.85rem;
 }
 
+.providerRating svg {
+  vertical-align: -0.15rem;
+  color: #d97706;
+}
+
+.providerLocation svg,
+.nearbyCard small svg,
+.nearbyCard p svg {
+  margin-right: 0.2rem;
+  vertical-align: -0.15rem;
+}
+
+.nearbyCard small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .contactTitle {
   margin: 0 0 0.75rem;
   color: #0f172a;
@@ -421,6 +455,7 @@
   border: 1px solid #bfdbfe;
   border-radius: 16px;
   background: #f8fbff;
+  animation: dashboardEnter 420ms 70ms ease-out both;
 }
 
 .nearbySection h2 {
@@ -451,13 +486,56 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--color-surface);
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  animation: dashboardEnter 360ms ease-out both;
+}
+
+.nearbyCard:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.nearbyCard:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.nearbyCard:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.nearbyCard:hover,
+.nearbySelected {
+  transform: translateY(-2px);
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.12);
 }
 
 .nearbyCard strong {
   color: #0f172a;
+}
+
+.selectNearby {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.selectNearby[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .nearbyCard p,
@@ -481,6 +559,54 @@
   border-radius: 12px;
   background-color: #eff6ff;
   border: 1px solid #bfdbfe;
+}
+
+.searchForm,
+.contractList,
+.profileView {
+  animation: dashboardEnter 380ms ease-out both;
+}
+
+.contractItem {
+  animation: dashboardEnter 360ms ease-out both;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.contractItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgb(var(--color-shadow) / 7%);
+}
+
+.viewProfileBtn,
+.requestBtn,
+.secondaryAction,
+.selectNearby {
+  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.viewProfileBtn:hover,
+.requestBtn:hover,
+.secondaryAction:hover,
+.selectNearby:hover {
+  transform: translateY(-1px);
+}
+
+.viewProfileBtn:active,
+.requestBtn:active,
+.secondaryAction:active,
+.selectNearby:active {
+  transform: translateY(0);
+}
+
+@keyframes dashboardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .requestTitle {
@@ -554,12 +680,32 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card {
+  .card,
+  .header,
+  .nearbySection,
+  .nearbyCard,
+  .searchForm,
+  .contractList,
+  .profileView,
+  .contractItem,
+  .viewProfileBtn,
+  .requestBtn,
+  .secondaryAction,
+  .selectNearby {
     animation: none;
     transition: none;
   }
 
-  .card:hover {
+  .card:hover,
+  .nearbyCard:hover,
+  .contractItem:hover {
     transform: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .header {
+    background-position: center, 75% center;
+    background-size: 100% 100%, auto 150%;
   }
 }

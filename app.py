@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from os import getenv
 from rotas.categorias_routes import categorias_bp
 from rotas.prestadores_routes import prestadores_bp
@@ -7,6 +7,8 @@ from rotas.avaliacoes_routes import avaliacoes_bp
 from rotas.auth_route import auth_bp
 from rotas.analises_routes import analises_bp
 from rotas.geografia_routes import geografia_bp
+from rotas.chat_routes import chat_bp
+from rotas.dev_routes import dev_bp
 from flask_cors import CORS
 
 
@@ -21,6 +23,8 @@ app.register_blueprint(avaliacoes_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(analises_bp)
 app.register_blueprint(geografia_bp)
+app.register_blueprint(chat_bp)
+app.register_blueprint(dev_bp)
 
 @app.route('/')
 def home():
@@ -36,6 +40,13 @@ def metodo_nao_permitido(e):
 
 @app.errorhandler(500)
 def erro_interno(e):
+    original = getattr(e, "original_exception", None) or e
+    app.logger.error(
+        "Unhandled request failure for %s %s",
+        request.method,
+        request.path,
+        exc_info=(type(original), original, original.__traceback__),
+    )
     return jsonify({"erro": "Erro interno do servidor"}), 500
 
 if __name__ == "__main__":

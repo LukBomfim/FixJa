@@ -2,6 +2,8 @@ import os
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from supabase import AuthApiError
+import httpx
 
 os.environ.setdefault("SUPABASE_URL", "https://unit-test.supabase.co")
 os.environ.setdefault("SUPABASE_KEY", "unit-test-key")
@@ -22,13 +24,21 @@ class ProtectedRouteTests(unittest.TestCase):
         response = self.client.get("/contratacoes")
         self.assertEqual(response.status_code, 401)
 
-    @patch("auth.middleware.supabase_client.auth.get_user", side_effect=RuntimeError("invalid token"))
+    @patch("auth.middleware.supabase_client.auth.get_user", side_effect=AuthApiError("invalid token", 401, None))
     def test_invalid_token_is_rejected(self, get_user):
         response = self.client.get(
             "/contratacoes",
             headers={"Authorization": "Bearer invalid-token"},
         )
         self.assertEqual(response.status_code, 401)
+
+    @patch("auth.middleware.supabase_client.auth.get_user", side_effect=httpx.ConnectError("auth service unavailable"))
+    def test_auth_service_failure_does_not_invalidate_session(self, get_user):
+        response = self.client.get(
+            "/contratacoes",
+            headers={"Authorization": " ".join(('Bearer', "test-auth-token"))},
+        )
+        self.assertEqual(response.status_code, 503)
 
     @patch("auth.middleware.supabase_client.auth.get_user")
     @patch("rotas.contratacoes_routes.buscar_perfil_por_id")

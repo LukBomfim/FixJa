@@ -9,6 +9,13 @@ def gerar_grafico_geografico(vertices, grafo, caminho=None) -> bytes:
 
     caminho = caminho or []
     fig, axis = plt.subplots(figsize=(8, 5), constrained_layout=True)
+    if not vertices:
+        axis.text(0.5, 0.5, "Nenhum prestador com localização cadastrada", ha="center", va="center")
+        axis.set_axis_off()
+        output = BytesIO()
+        fig.savefig(output, format="png", dpi=140)
+        plt.close(fig)
+        return output.getvalue()
     pontos_por_id = {str(ponto["id"]): ponto for ponto in vertices}
     for origem, conexoes in grafo.items():
         ponto_origem = pontos_por_id[origem]
@@ -44,9 +51,9 @@ def gerar_grafico_geografico(vertices, grafo, caminho=None) -> bytes:
                 zorder=3,
             )
 
-    origem = vertices[0]
-    prestadores = vertices[1:]
-    if prestadores:
+    origem = next((ponto for ponto in vertices if str(ponto["id"]) == "__origem__"), None)
+    prestadores = [ponto for ponto in vertices if ponto is not origem]
+    if vertices:
         axis.scatter(
             [ponto["longitude"] for ponto in prestadores],
             [ponto["latitude"] for ponto in prestadores],
@@ -54,15 +61,16 @@ def gerar_grafico_geografico(vertices, grafo, caminho=None) -> bytes:
             label="Prestadores cadastrados",
             zorder=4,
         )
-    axis.scatter(
-        [origem["longitude"]],
-        [origem["latitude"]],
-        color="#dc2626",
-        marker="*",
-        s=150,
-        label="Localização de busca",
-        zorder=5,
-    )
+    if origem:
+        axis.scatter(
+            [origem["longitude"]],
+            [origem["latitude"]],
+            color="#dc2626",
+            marker="*",
+            s=150,
+            label="Localização de busca",
+            zorder=5,
+        )
     axis.set_xlabel("Longitude")
     axis.set_ylabel("Latitude")
     axis.set_title("Grafo geográfico de prestadores — arestas ponderadas por distância")

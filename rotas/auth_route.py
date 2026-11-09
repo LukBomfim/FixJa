@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+import httpx
+from supabase import AuthApiError, AuthRetryableError
 from auth.middleware import login_obrigatorio
-from servicos.auth_service import logar_usuario, registrar_usuario
+from servicos.auth_service import logar_usuario, registrar_usuario, renovar_sessao
 from servicos.perfils_service import atualizar_perfil, buscar_perfil_por_id, criar_perfil
 
 auth_bp = Blueprint('auth', __name__)
@@ -16,8 +18,8 @@ def login():
         if resultado is None:
             return jsonify({"erro": "Email ou senha inválidos"}), 401
 
-        usuario, token = resultado
-        return jsonify({"usuario": usuario, "token": token}), 200
+        usuario, token, refresh_token = resultado
+        return jsonify({"usuario": usuario, "token": token, "refresh_token": refresh_token}), 200
 
     except KeyError as e:
         return jsonify({"erro": f"O campo {str(e)} é obrigatório!"}), 400
@@ -41,16 +43,42 @@ def registrar():
         )
         if not resultado:
             return jsonify({"erro": "Não foi possível criar a conta"}), 400
-        user, token = resultado
+        user, token, refresh_token = resultado
         return jsonify({
             "usuario": {"id": user.id, "username": user.username, "email": user.email},
             "token": token,
+            "refresh_token": refresh_token,
         }), 201
     except KeyError as e:
         return jsonify({"erro": f"O campo {str(e)} é obrigatório!"}), 400
 
     except Exception as e:
         return jsonify({"erro": str(e)}), 400 
+
+
+@auth_bp.route('/session/refresh', methods=['POST'])
+def atualizar_sessao():
+    dados = request.get_json(silent=True) or {}
+    refresh_token = dados.get("refresh_token")
+    if not isinstance(refresh_token, str) or not refresh_token.strip():
+        return jsonify({"erro": "Sessão expirada. Entre novamente."}), 400
+
+    try:
+        resultado = renovar_sessao(refresh_token)
+    except AuthApiError:
+        current_app.logger.exception("Supabase Auth falhou ao renovar a sessão")
+        return jsonify({"erro": "Não foi possível atualizar a sessão agora. Tente novamente."}), 503
+    except AuthRetryableError:
+        current_app.logger.exception("Supabase Auth indisponível ao renovar a sessão")
+        return jsonify({"erro": "Não foi possível atualizar a sessão agora. Tente novamente."}), 503
+    except httpx.HTTPError:
+        current_app.logger.exception("Falha de rede ao renovar a sessão")
+        return jsonify({"erro": "Não foi possível atualizar a sessão agora. Tente novamente."}), 503
+
+    if resultado is None:
+        return jsonify({"erro": "Sua sessão expirou. Entre novamente."}), 401
+    token, novo_refresh_token = resultado
+    return jsonify({"token": token, "refresh_token": novo_refresh_token}), 200
 @auth_bp.route('/register/profile', methods=['POST'])
 @login_obrigatorio
 def registrar_perfil():

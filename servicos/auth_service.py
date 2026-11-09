@@ -16,7 +16,7 @@ except:
 supabase_client: Client = create_client(SUPABASE_URL,SUPABASE_KEY) # type: ignore
 
 
-def registrar_usuario(email:str,senha:str,username:str) -> tuple[Usuario, str | None] | None:
+def registrar_usuario(email:str,senha:str,username:str) -> tuple[Usuario, str | None, str | None] | None:
     """
     Registra um usuario no banco de dados caso não exista, se existir exibi um erro e retorna None
     """
@@ -40,24 +40,30 @@ def registrar_usuario(email:str,senha:str,username:str) -> tuple[Usuario, str | 
             return None
         usuario.id = response.user.id
         usuario.senha = ""
-        return usuario, response.session.access_token if response.session else None
+        return (
+            usuario,
+            response.session.access_token if response.session else None,
+            response.session.refresh_token if response.session else None,
+        )
     except AuthApiError as e:
         print(f"ERRO: não Foi possivel cadastrar o usuario no banco de dados:{e}")      
     except Exception as e:
         print(f"ERRO: não foi possível cadastrar o usuário: {e}")
     return None
 
-def logar_usuario(email: str, senha: str) -> tuple[dict | None, str] | None:
+def logar_usuario(email: str, senha: str) -> tuple[dict | None, str, str] | None:
     """
-    Retorna (usuario, access_token) se as credenciais forem válidas, None caso contrário.
+    Retorna os dados do usuário e os tokens da sessão se as credenciais forem válidas.
     """
     try:
         auth_client = create_client(SUPABASE_URL, SUPABASE_KEY) # type: ignore
         response = auth_client.auth.sign_in_with_password(
             {"email": email, "password": senha}
         )
-    except AuthApiError:
-        return None
+    except AuthApiError as error:
+        if error.status in (400, 401, 403):
+            return None
+        raise
 
     if not response.user or not response.session:
         return None
@@ -72,4 +78,19 @@ def logar_usuario(email: str, senha: str) -> tuple[dict | None, str] | None:
     usuario = registro if isinstance(registro, dict) else None
     if usuario:
         usuario.pop("senha", None)
-    return usuario, response.session.access_token
+    return usuario, response.session.access_token, response.session.refresh_token
+
+
+def renovar_sessao(refresh_token: str) -> tuple[str, str] | None:
+    """Troca o refresh token por uma nova sessão Supabase."""
+    auth_client = create_client(SUPABASE_URL, SUPABASE_KEY)  # type: ignore
+    try:
+        response: AuthResponse = auth_client.auth.refresh_session(refresh_token)
+    except AuthApiError as error:
+        if error.status in (400, 401, 403):
+            return None
+        raise
+
+    if not response.session:
+        return None
+    return response.session.access_token, response.session.refresh_token
