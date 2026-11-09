@@ -7,6 +7,9 @@ from os import getenv
 from datetime import date
 from modelos.modelos import Usuario
 
+from algoritmos.grafo_geografico import coordenadas_validas
+from servicos.localizacao_service import UFS_BRASIL
+
 load_dotenv()
 
 try:
@@ -91,6 +94,9 @@ def _perfil_publico(perfil):
 def _prestador_publico(perfil):
     perfil = _perfil_publico(perfil)
     perfil.pop("data_nascimento", None)
+    perfil.pop("endereco", None)
+    perfil.pop("latitude", None)
+    perfil.pop("longitude", None)
     return perfil
 
 
@@ -102,6 +108,11 @@ def buscar_perfil_prestador_por_id(user_id):
 
 
 def criar_perfil(user_id, email, dados):
+    dados = dict(dados)
+    if isinstance(dados.get("estado"), str):
+        dados["estado"] = dados["estado"].strip().upper()
+    if dados["tipo"] == "PRESTADOR":
+        _validar_localizacao_prestador(dados, obrigatoria=True)
     perfil = {
         "id": user_id,
         "email": email,
@@ -111,6 +122,10 @@ def criar_perfil(user_id, email, dados):
         "tipo": dados["tipo"],
         "categoria": dados.get("categoria") or None,
         "cidade": dados.get("cidade") or "",
+        "estado": dados.get("estado") or None,
+        "endereco": dados.get("endereco") or None,
+        "latitude": dados.get("latitude"),
+        "longitude": dados.get("longitude"),
         "descricao": dados.get("descricao") or None,
         "avaliacao": 0.0,
     }
@@ -119,12 +134,25 @@ def criar_perfil(user_id, email, dados):
 
 
 def atualizar_perfil(user_id, dados):
-    campos = ("username", "telefone", "data_nascimento", "categoria", "cidade", "descricao")
+    campos = (
+        "username", "telefone", "data_nascimento", "categoria", "cidade", "estado",
+        "endereco", "latitude", "longitude", "descricao",
+    )
     alteracoes = {campo: dados[campo] for campo in campos if campo in dados}
     if "username" in alteracoes and isinstance(alteracoes["username"], str):
         alteracoes["username"] = alteracoes["username"].strip()
+    if "estado" in alteracoes and isinstance(alteracoes["estado"], str):
+        alteracoes["estado"] = alteracoes["estado"].strip().upper()
+    atual = buscar_perfil_por_id(user_id)
+    if atual and atual.get("tipo") == "PRESTADOR":
+        localizacao = {**atual, **alteracoes}
+        _validar_localizacao_prestador(localizacao, obrigatoria=False)
+        if "latitude" in alteracoes:
+            alteracoes["latitude"] = float(alteracoes["latitude"])
+        if "longitude" in alteracoes:
+            alteracoes["longitude"] = float(alteracoes["longitude"])
     if not alteracoes:
-        return buscar_perfil_por_id(user_id)
+        return atual
     response = (
         get_request_supabase_client().table("profiles")
         .update(alteracoes)
@@ -132,6 +160,24 @@ def atualizar_perfil(user_id, dados):
         .execute()
     )
     return _perfil_publico(response.data[0]) if response.data else buscar_perfil_por_id(user_id)
+
+
+def _validar_localizacao_prestador(dados, obrigatoria):
+    cidade = dados.get("cidade")
+    estado = dados.get("estado")
+    endereco = dados.get("endereco")
+    latitude = dados.get("latitude")
+    longitude = dados.get("longitude")
+    if not obrigatoria and latitude is None and longitude is None:
+        return
+    if not isinstance(cidade, str) or not cidade.strip():
+        raise ValueError("Informe a cidade do prestador.")
+    if not isinstance(estado, str) or estado.strip().upper() not in UFS_BRASIL:
+        raise ValueError("Informe a sigla do estado do prestador.")
+    if not isinstance(endereco, str) or not endereco.strip():
+        raise ValueError("Informe o endereço ou local de atendimento.")
+    if not coordenadas_validas(latitude, longitude):
+        raise ValueError("Informe latitude e longitude válidas.")
 
 def avaliar_perfil(user_id,contratacao_id,nota,comentario):
     global supabase_client
@@ -181,7 +227,6 @@ def buscar_avaliacao_por_id_prestador(user_id):
         .table("avaliacoes")
         .select("*")
         .eq("prestador_id", user_id)
-        .order("data", desc=True)
         .limit(5)
         .execute()
     )

@@ -3,6 +3,7 @@ import styles from './login/Login.module.css';
 import { api, errorMessage } from '../services/api';
 import type { AccountType, Category, ProfileInput, Review, UserProfile } from '../services/api';
 import type { RegistrationDraft } from './cadastro/cadastro';
+import LocationPicker, { type LocationValue } from '../components/LocationPicker';
 
 interface ProfileProps {
 	profile: UserProfile | null;
@@ -17,7 +18,14 @@ const Profile: React.FC<ProfileProps> = ({ profile, initial, onSaved, onLogout }
 	const [birthDate, setBirthDate] = useState(profile?.data_nascimento?.slice(0, 10) || '1990-01-01');
 	const [accountType, setAccountType] = useState<AccountType>(profile?.tipo || initial?.tipo || 'CLIENTE');
 	const [category, setCategory] = useState(profile?.categoria || initial?.categoria || '');
-	const [city, setCity] = useState(profile?.cidade || '');
+	const [location, setLocation] = useState<LocationValue>({
+		estado: profile?.estado || '',
+		cidade: profile?.cidade || '',
+		endereco: profile?.endereco || '',
+		latitude: profile?.latitude?.toString() || '',
+		longitude: profile?.longitude?.toString() || '',
+	});
+	const [locationConfirmed, setLocationConfirmed] = useState(false);
 	const [description, setDescription] = useState(profile?.descricao || '');
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [reviews, setReviews] = useState<Review[]>([]);
@@ -48,6 +56,10 @@ const Profile: React.FC<ProfileProps> = ({ profile, initial, onSaved, onLogout }
 			setError('Informe seu nome.');
 			return;
 		}
+		if (accountType === 'PRESTADOR' && !locationConfirmed) {
+			setError('Confirme a localização selecionada antes de salvar o perfil.');
+			return;
+		}
 		setLoading(true);
 		setError('');
 		const values: ProfileInput = {
@@ -55,7 +67,11 @@ const Profile: React.FC<ProfileProps> = ({ profile, initial, onSaved, onLogout }
 			telefone: phone.trim(),
 			data_nascimento: birthDate,
 			categoria: accountType === 'PRESTADOR' ? category || null : null,
-			cidade: city.trim(),
+			cidade: location.cidade.trim(),
+			estado: location.estado || null,
+			endereco: accountType === 'PRESTADOR' ? location.endereco.trim() : null,
+			latitude: accountType === 'PRESTADOR' ? Number(location.latitude) : null,
+			longitude: accountType === 'PRESTADOR' ? Number(location.longitude) : null,
 			descricao: description.trim() || null,
 		};
 		try {
@@ -109,10 +125,12 @@ const Profile: React.FC<ProfileProps> = ({ profile, initial, onSaved, onLogout }
 							</select>
 						</div>
 					)}
-					<div className={styles.inputField}>
-						<label className={styles.label} htmlFor="profile-city">Cidade</label>
-						<input id="profile-city" className={styles.input} value={city} onChange={(event) => setCity(event.target.value)} />
-					</div>
+					<LocationPicker
+						value={location}
+						onChange={setLocation}
+						onConfirmedChange={setLocationConfirmed}
+						showAddress={accountType === 'PRESTADOR'}
+					/>
 					<div className={styles.inputField}>
 						<label className={styles.label} htmlFor="profile-description">Descrição</label>
 						<textarea id="profile-description" className={styles.input} value={description} onChange={(event) => setDescription(event.target.value)} rows={3} />

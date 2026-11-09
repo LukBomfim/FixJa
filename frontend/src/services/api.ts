@@ -10,11 +10,15 @@ export interface UserProfile {
 	tipo: AccountType;
 	categoria: string | null;
 	cidade: string;
+	estado: string | null;
+	endereco: string | null;
+	latitude: number | null;
+	longitude: number | null;
 	descricao: string | null;
 	avaliacao: number;
 }
 
-export type Provider = Omit<UserProfile, 'data_nascimento'>;
+export type Provider = Omit<UserProfile, 'data_nascimento' | 'endereco' | 'latitude' | 'longitude'>;
 
 export interface Category {
 	id: string;
@@ -56,7 +60,40 @@ export interface ProfileInput {
 	tipo?: AccountType;
 	categoria: string | null;
 	cidade: string;
+	estado: string | null;
+	endereco: string | null;
+	latitude: number | null;
+	longitude: number | null;
 	descricao: string | null;
+}
+
+export interface NearbyRecommendation {
+	prestador: Pick<Provider, 'id' | 'username' | 'categoria' | 'cidade' | 'estado' | 'avaliacao'>;
+	distancia_km: number;
+}
+
+export interface NearbyResult {
+	prestadores: NearbyRecommendation[];
+	grafo_png_base64: string;
+	quantidade_vertices: number;
+	quantidade_arestas: number;
+}
+
+export interface BenchmarkResult {
+	criterio: string;
+	registros_disponiveis: number;
+	cenarios: Array<{
+		quantidade: number;
+		mais_rapido: string;
+		resultados: Array<{
+			algoritmo: string;
+			tempo_ms: number;
+			comparacoes: number;
+			trocas: number;
+			movimentacoes: number;
+		}>;
+	}>;
+	grafico_png_base64: string;
 }
 
 export interface RegistrationResult {
@@ -164,6 +201,12 @@ export const api = {
 		if (filters.cidade) query.set('cidade', filters.cidade);
 		const suffix = query.size ? `?${query.toString()}` : '';
 		return request(`/prestadores${suffix}`);
+	},
+	nearbyProviders(location: { latitude: number; longitude: number; cidade?: string; estado?: string }): Promise<NearbyResult> {
+		return request('/prestadores/proximos', { method: 'POST', ...jsonBody(location) });
+	},
+	benchmark(): Promise<BenchmarkResult> {
+		return request('/analises/benchmark');
 	},
 	provider(id: string): Promise<Provider> {
 		return request(`/prestadores/${encodeURIComponent(id)}`);

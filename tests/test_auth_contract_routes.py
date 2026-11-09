@@ -1,12 +1,13 @@
 import os
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("SUPABASE_URL", "https://unit-test.supabase.co")
 os.environ.setdefault("SUPABASE_KEY", "unit-test-key")
 
 from app import app
+from servicos.perfils_service import buscar_avaliacao_por_id_prestador
 
 
 class ProtectedRouteTests(unittest.TestCase):
@@ -282,6 +283,24 @@ class ProtectedRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(create_profile.call_args.args[:2], ("user-from-token", "token@example.test"))
+
+
+class ReviewServiceTests(unittest.TestCase):
+    @patch("servicos.perfils_service.get_request_supabase_client")
+    def test_provider_reviews_do_not_order_by_missing_data_column(self, get_client):
+        reviews = [{"id": 1, "nota": 5, "comentario": "Excelente"}]
+        query = Mock()
+        query.select.return_value = query
+        query.eq.return_value = query
+        query.limit.return_value = query
+        query.execute.return_value = SimpleNamespace(data=reviews)
+        get_client.return_value.table.return_value = query
+
+        result = buscar_avaliacao_por_id_prestador("provider-id")
+
+        self.assertEqual(result, reviews)
+        query.order.assert_not_called()
+        query.limit.assert_called_once_with(5)
 
 
 if __name__ == "__main__":

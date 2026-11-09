@@ -414,6 +414,67 @@
     grid-column: auto;
   }
 }
+
+.nearbySection {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.nearbySection h2 {
+  margin: 0 0 0.4rem;
+  color: #0f172a;
+  font-size: 1.2rem;
+}
+
+.nearbySection > p {
+  margin: 0.25rem 0 1rem;
+}
+
+.nearbySection form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.nearbyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.nearbyCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.nearbyCard strong {
+  color: #0f172a;
+}
+
+.nearbyCard p,
+.nearbyCard small {
+  display: block;
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.graphImage {
+  display: block;
+  max-width: 100%;
+  margin: 1rem auto 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
 .requestBox {
   margin-top: 1.5rem;
   padding: 1.25rem;

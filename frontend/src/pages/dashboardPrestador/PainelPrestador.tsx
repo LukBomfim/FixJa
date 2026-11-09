@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './DashboardPrestador.module.css';
 import { api, errorMessage } from '../../services/api';
-import type { Contract, ContractStatus, UserProfile } from '../../services/api';
+import type { BenchmarkResult, Contract, ContractStatus, UserProfile } from '../../services/api';
+import { LinkedList, Stack } from '../../dataStructures';
 
 interface DashboardPrestadorProps {
   profile: UserProfile;
@@ -17,12 +18,30 @@ const STATUS_LABELS: Record<ContractStatus, string> = {
 
 const STATUS_ORDER: ContractStatus[] = ['pendente', 'aceito', 'concluido', 'cancelado', 'recusado'];
 
+interface ProviderAction {
+  contractId: string;
+  client: string;
+  previousStatus: ContractStatus;
+  nextStatus: ContractStatus;
+  createdAt: string;
+}
+
 export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile }) => {
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [actionHistory, setActionHistory] = useState<ProviderAction[]>([]);
+  const [benchmark, setBenchmark] = useState<BenchmarkResult | null>(null);
+  const [benchmarkLoading, setBenchmarkLoading] = useState(true);
+  const [benchmarkError, setBenchmarkError] = useState('');
   const [currentContract, setCurrentContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
+  const contractList = useMemo(() => {
+    const list = new LinkedList<Contract>();
+    contracts.forEach((contract) => list.append(contract));
+    return list;
+  }, [contracts]);
+  const actionsStack = new Stack(actionHistory);
 
   useEffect(() => {
     let active = true;
@@ -37,9 +56,22 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
     return () => { active = false; };
   }, []);
 
-  const pendingContracts = contracts.filter((contract) => contract.status === 'pendente');
-  const activeContracts = contracts.filter((contract) => contract.status === 'aceito');
-  const finishedContracts = contracts.filter((contract) => contract.status === 'concluido');
+  useEffect(() => {
+    let active = true;
+    api.benchmark()
+      .then((result) => { if (active) setBenchmark(result); })
+      .catch((requestError: unknown) => { if (active) setBenchmarkError(errorMessage(requestError)); })
+      .finally(() => { if (active) setBenchmarkLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const pendingContracts = [...contractList]
+    .filter((contract) => contract.status === 'pendente')
+    .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at));
+  const activeContracts = [...contractList].filter((contract) => contract.status === 'aceito');
+  const finishedContracts = [...contractList]
+    .filter((contract) => contract.status === 'concluido')
+    .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at));
 
   const updateStatus = async (status: ContractStatus, targetContract = currentContract) => {
     if (!targetContract) return;
@@ -47,7 +79,24 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
     setError('');
     try {
       const updated = await api.updateContract(targetContract.id, status);
-      setContracts((current) => current.map((contract) => contract.id === updated.id ? updated : contract));
+      setContracts((current) => {
+        const list = new LinkedList<Contract>();
+        current.forEach((contract) => list.append(contract));
+        list.remove((contract) => contract.id === updated.id);
+        list.append(updated);
+        return [...list];
+      });
+      setActionHistory((current) => {
+        const stack = new Stack(current);
+        stack.push({
+          contractId: updated.id,
+          client: updated.cliente_nome || 'Cliente',
+          previousStatus: targetContract.status,
+          nextStatus: updated.status,
+          createdAt: new Date().toISOString(),
+        });
+        return stack.toArrayNewestFirst().reverse();
+      });
       setCurrentContract(updated);
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -99,7 +148,14 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
                     <span className={styles.requestStatus}>{STATUS_LABELS[contract.status]}</span>
                   </div>
                   <div className={styles.requestActions}>
-                    <button type="button" className={styles.attendBtn} onClick={() => setCurrentContract(contract)}>Atender</button>
+                    <button
+                      type="button"
+                      className={styles.attendBtn}
+                      disabled={index !== 0}
+                      onClick={() => setCurrentContract(contractList.find((item) => item.id === contract.id) || contract)}
+                    >
+                      {index === 0 ? 'Atender' : 'Na fila'}
+                    </button>
                     <button type="button" className={styles.refuseBtn} disabled={updating} onClick={() => void updateStatus('recusado', contract)}>Recusar</button>
                   </div>
                 </article>
@@ -173,7 +229,7 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
         </section>
 
         <section className={styles.section}>
-          <div className={styles.sectionHeader}><div><h2>Atendimentos finalizados</h2><p>Histórico de contratações</p></div></div>
+          <div className={styles.sectionHeader}><div><h2>Atendimentos finalizados</h2><p>Histórico de contratações</p></div><span className={styles.stackBadge}>LISTA</span></div>
           {finishedContracts.length === 0 ? (
             <div className={styles.noService}><p>Nenhum atendimento finalizado.</p></div>
           ) : (
@@ -193,6 +249,77 @@ export const DashboardPrestador: React.FC<DashboardPrestadorProps> = ({ profile 
           )}
         </section>
       </div>
+
+      <section className={styles.section} aria-labelledby="action-stack-heading">
+        <div className={styles.sectionHeader}>
+          <div><h2 id="action-stack-heading">Ações recentes (pilha LIFO)</h2><p>Ações confirmadas pela API nesta sessão, da mais recente para a mais antiga.</p></div>
+          <span className={styles.stackBadge}>{actionsStack.peek() ? 'TOPO' : 'VAZIA'}</span>
+        </div>
+        {actionsStack.peek() ? (
+          <>
+            <p className={styles.stackTop}>
+              Última ação: {actionsStack.peek()!.client} — {STATUS_LABELS[actionsStack.peek()!.previousStatus]} para {STATUS_LABELS[actionsStack.peek()!.nextStatus]}
+            </p>
+            <div className={styles.queue}>
+              {actionsStack.toArrayNewestFirst().map((action, index) => (
+                <article key={`${action.contractId}-${action.createdAt}`} className={styles.requestCard}>
+                  <div className={styles.requestNumber}>{index + 1}</div>
+                  <div className={styles.requestInfo}>
+                    <strong>{action.client}</strong>
+                    <p>{STATUS_LABELS[action.previousStatus]} → {STATUS_LABELS[action.nextStatus]}</p>
+                    <small>{new Date(action.createdAt).toLocaleString('pt-BR')}</small>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={styles.popButton}
+              onClick={() => setActionHistory((current) => {
+                const stack = new Stack(current);
+                stack.pop();
+                return stack.toArrayNewestFirst().reverse();
+              })}
+            >
+              Remover ação do topo (somente nesta tela)
+            </button>
+            <p className={styles.historyHint}>A remoção altera apenas esta pilha local; não desfaz a mudança já salva no servidor.</p>
+          </>
+        ) : <p className={styles.empty}>As próximas ações de status confirmadas serão registradas aqui.</p>}
+      </section>
+
+      <section className={styles.section} aria-labelledby="sorting-benchmark-heading">
+        <div className={styles.sectionHeader}>
+          <div><h2 id="sorting-benchmark-heading">Benchmark de ordenação</h2><p>Execução com avaliações reais de prestadores cadastrados; nenhuma amostra é inventada.</p></div>
+        </div>
+        {benchmarkLoading ? <p className={styles.empty} role="status">Executando benchmark...</p> : benchmarkError ? (
+          <p className={styles.errorMessage} role="alert">{benchmarkError}</p>
+        ) : benchmark && benchmark.registros_disponiveis === 0 ? (
+          <p className={styles.empty}>Não há prestadores cadastrados para comparar os algoritmos.</p>
+        ) : benchmark ? (
+          <>
+            <p className={styles.historyHint}>
+              {benchmark.registros_disponiveis} prestador(es) disponíveis · critério: {benchmark.criterio}.
+            </p>
+            {benchmark.cenarios.map((scenario) => (
+              <div key={scenario.quantidade} className={styles.benchmarkScenario}>
+                <h3>{scenario.quantidade} registro(s) — mais rápido: {scenario.mais_rapido}</h3>
+                <div className={styles.benchmarkTable} role="table" aria-label={`Medições com ${scenario.quantidade} registros`}>
+                  <div className={styles.benchmarkRow} role="row">
+                    <strong>Algoritmo</strong><strong>Tempo (ms)</strong><strong>Comparações</strong><strong>Trocas</strong><strong>Movimentações</strong>
+                  </div>
+                  {scenario.resultados.map((result) => (
+                    <div className={styles.benchmarkRow} role="row" key={result.algoritmo}>
+                      <span>{result.algoritmo}</span><span>{result.tempo_ms}</span><span>{result.comparacoes}</span><span>{result.trocas}</span><span>{result.movimentacoes}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <img className={styles.benchmarkImage} src={`data:image/png;base64,${benchmark.grafico_png_base64}`} alt="Gráfico Matplotlib de tempo medido para os quatro algoritmos de ordenação" />
+          </>
+        ) : null}
+      </section>
     </div>
   );
 };

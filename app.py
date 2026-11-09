@@ -5,6 +5,8 @@ from rotas.prestadores_routes import prestadores_bp
 from rotas.contratacoes_routes import contratacoes_bp
 from rotas.avaliacoes_routes import avaliacoes_bp
 from rotas.auth_route import auth_bp
+from rotas.analises_routes import analises_bp
+from rotas.geografia_routes import geografia_bp
 from flask_cors import CORS
 
 
@@ -17,6 +19,8 @@ app.register_blueprint(prestadores_bp)
 app.register_blueprint(contratacoes_bp)
 app.register_blueprint(avaliacoes_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(analises_bp)
+app.register_blueprint(geografia_bp)
 
 @app.route('/')
 def home():

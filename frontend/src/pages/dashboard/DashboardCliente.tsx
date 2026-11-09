@@ -1,7 +1,8 @@
     import React, { useEffect, useState } from 'react';
     import styles from './DashboardCliente.module.css';
     import { api, errorMessage } from '../../services/api';
-    import type { Category, Contract, ContractStatus, Provider, Review, UserProfile } from '../../services/api';
+    import type { Category, Contract, ContractStatus, NearbyRecommendation, Provider, Review, UserProfile } from '../../services/api';
+    import LocationPicker, { type LocationValue } from '../../components/LocationPicker';
 
     interface DashboardClientProps {
       profile: UserProfile;
@@ -36,6 +37,19 @@
       const [notice, setNotice] = useState('');
       const [reviewNotes, setReviewNotes] = useState<Record<string, number>>({});
       const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
+      const [location, setLocation] = useState<LocationValue>({
+        estado: profile.estado || '',
+        cidade: profile.cidade || '',
+        endereco: '',
+        latitude: '',
+        longitude: '',
+      });
+      const [locationConfirmed, setLocationConfirmed] = useState(false);
+      const [nearbyProviders, setNearbyProviders] = useState<NearbyRecommendation[]>([]);
+      const [nearbyGraph, setNearbyGraph] = useState('');
+      const [nearbyLoading, setNearbyLoading] = useState(false);
+      const [nearbySearched, setNearbySearched] = useState(false);
+      const [nearbyError, setNearbyError] = useState('');
 
       useEffect(() => {
         let active = true;
@@ -94,6 +108,36 @@
           setError(errorMessage(requestError));
         } finally {
           setLoading(false);
+        }
+      };
+
+      const handleNearbySearch = async (event: React.FormEvent) => {
+        event.preventDefault();
+        const latitude = Number(location.latitude);
+        const longitude = Number(location.longitude);
+        if (!locationConfirmed || !Number.isFinite(latitude) || !Number.isFinite(longitude)
+          || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+          setNearbyError('Informe e confirme uma localização válida para buscar prestadores próximos.');
+          return;
+        }
+        setNearbyLoading(true);
+        setNearbyError('');
+        setNearbySearched(true);
+        try {
+          const result = await api.nearbyProviders({
+            latitude,
+            longitude,
+            cidade: location.cidade || undefined,
+            estado: location.estado || undefined,
+          });
+          setNearbyProviders(result.prestadores);
+          setNearbyGraph(result.grafo_png_base64);
+        } catch (requestError) {
+          setNearbyError(errorMessage(requestError));
+          setNearbyProviders([]);
+          setNearbyGraph('');
+        } finally {
+          setNearbyLoading(false);
         }
       };
 
@@ -232,6 +276,43 @@
 
           {mode === 'providers' ? (
             <>
+              <section className={styles.nearbySection} aria-labelledby="nearby-heading">
+                <h2 id="nearby-heading">Prestadores próximos de você</h2>
+                <p className={styles.providerLocation}>A recomendação usa um grafo geográfico e caminhos mínimos calculados no backend.</p>
+                <form onSubmit={handleNearbySearch}>
+                  <LocationPicker
+                    value={location}
+                    onChange={setLocation}
+                    onConfirmedChange={setLocationConfirmed}
+                    showAddress={false}
+                  />
+                  <button type="submit" className={styles.viewProfileBtn} disabled={nearbyLoading}>
+                    {nearbyLoading ? 'Calculando proximidade...' : 'Buscar prestadores próximos'}
+                  </button>
+                </form>
+                {nearbyError && <p className={styles.errorMessage} role="alert">{nearbyError}</p>}
+                {nearbyLoading ? <p className={styles.emptyState} role="status">Calculando caminhos e distâncias...</p> : null}
+                {!nearbyLoading && nearbySearched && !nearbyError && nearbyProviders.length === 0 && (
+                  <p className={styles.emptyState}>Não há prestadores com localização cadastrada para este local.</p>
+                )}
+                {!nearbyLoading && nearbyProviders.length > 0 && (
+                  <>
+                    <div className={styles.nearbyGrid}>
+                      {nearbyProviders.map(({ prestador, distancia_km }) => (
+                        <article key={prestador.id} className={styles.nearbyCard}>
+                          <div>
+                            <strong>{prestador.username}</strong>
+                            <p>{prestador.categoria || 'Prestador'} · {prestador.cidade}{prestador.estado ? ` - ${prestador.estado}` : ''}</p>
+                            <small>{distancia_km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km aproximados</small>
+                          </div>
+                          <button type="button" className={styles.viewProfileBtn} onClick={() => void handleOpenProvider(prestador.id)}>Ver perfil</button>
+                        </article>
+                      ))}
+                    </div>
+                    {nearbyGraph && <img className={styles.graphImage} src={`data:image/png;base64,${nearbyGraph}`} alt="Grafo geográfico real, com conexões ponderadas e menor caminho calculado" />}
+                  </>
+                )}
+              </section>
               <form className={styles.searchForm} onSubmit={handleSearch}>
                 <input type="search" aria-label="Buscar por nome, serviço ou cidade" placeholder="Nome, serviço ou cidade" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className={styles.searchInput} />
                 <select aria-label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)} className={styles.searchSelect}>

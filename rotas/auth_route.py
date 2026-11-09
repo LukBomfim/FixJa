@@ -63,7 +63,10 @@ def registrar_perfil():
             return jsonify({"erro": "Tipo de perfil inválido"}), 400
         if not isinstance(dados.get('username'), str) or not dados['username'].strip():
             return jsonify({"erro": "O campo 'username' é obrigatório"}), 400
-        perfil = criar_perfil(usuario.id, usuario.email, dados)
+        try:
+            perfil = criar_perfil(usuario.id, usuario.email, dados)
+        except ValueError as error:
+            return jsonify({"erro": str(error)}), 400
         return jsonify(perfil), 201
     except KeyError as e:
         return jsonify({"erro": f"O campo {str(e)} é obrigatório!"}), 400
@@ -87,7 +90,10 @@ def editar_meu_perfil():
     if not buscar_perfil_por_id(request.usuario_atual.id):
         return jsonify({"erro": "Perfil não encontrado"}), 404
     dados = request.get_json() or {}
-    perfil = atualizar_perfil(request.usuario_atual.id, dados)
+    try:
+        perfil = atualizar_perfil(request.usuario_atual.id, dados)
+    except ValueError as error:
+        return jsonify({"erro": str(error)}), 400
     if not perfil:
         return jsonify({"erro": "Não foi possível atualizar o perfil"}), 400
     return jsonify(perfil), 200
