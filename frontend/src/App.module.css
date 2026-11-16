@@ -1,144 +1,82 @@
 .application {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-canvas);
   color: var(--color-text);
-  font-family: inherit;
-  transition: background-color 160ms ease, color 160ms ease;
 }
 
-.themeToggle {
+.application .floatingToggle {
   position: absolute;
-  top: 0.75rem;
-  right: 0.9rem;
+  top: max(0.9rem, env(safe-area-inset-top));
+  right: 1rem;
   z-index: 20;
-  padding: 0.5rem 0.7rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
 }
 
-.application[data-theme='dark'] .themeToggle {
-  border-color: var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.topbar {
-  min-height: 64px;
-  padding: 0 1.5rem;
+.simpleTopbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: max(0.9rem, env(safe-area-inset-top)) 1.1rem 0.6rem;
+  background: color-mix(in srgb, var(--color-canvas) 90%, transparent);
+  backdrop-filter: blur(10px);
 }
 
-.brand {
-  border: 0;
-  padding: 0;
-  background: none;
-  color: var(--color-accent);
-  font-size: 1.35rem;
-  font-weight: 800;
-  cursor: pointer;
+.splash {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-canvas);
 }
 
-.navigation {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
 }
 
-.navButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  padding: 0.55rem 0.85rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.navButton:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-accent-soft);
-}
-
-.navButton[aria-current='page'] {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.navButton:focus-visible,
-.themeToggle:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
-  outline-offset: 2px;
-}
-
-.content {
-  min-height: calc(100vh - 64px);
-}
-
-.content > * {
-  animation: pageEnter 280ms ease-out both;
-}
-
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
+@keyframes spin {
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: rotate(360deg);
   }
 }
 
 .messagePage {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  display: grid;
+  place-items: center;
   padding: 1.5rem;
-  background: var(--color-canvas);
-  color: var(--color-text);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .content > * {
-    animation: none;
-  }
+.messageCard {
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  width: min(440px, 100%);
 }
 
-@media (max-width: 480px) {
-  .topbar {
-    padding: 0 0.9rem;
-  }
+.messageCard > div {
+  width: 100%;
+}
 
-  .navigation {
-    gap: 0.3rem;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
+.messageActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
 
-  .navButton {
-    padding: 0.5rem 0.6rem;
-    font-size: 0.75rem;
-  }
+.restricted {
+  display: grid;
+  gap: 0.5rem;
 }

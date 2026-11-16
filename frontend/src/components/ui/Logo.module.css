@@ -1,0 +1,38 @@
+.logo {
+  display: inline-flex;
+  align-items: baseline;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  user-select: none;
+}
+
+.fix {
+  color: var(--color-text);
+}
+
+.ja {
+  position: relative;
+  color: var(--color-accent);
+}
+
+.roof {
+  position: absolute;
+  top: -0.42em;
+  right: -0.42em;
+  width: 0.5em;
+  height: auto;
+  color: var(--color-accent);
+}
+
+.sm {
+  font-size: 1.2rem;
+}
+
+.md {
+  font-size: 1.6rem;
+}
+
+.lg {
+  font-size: clamp(2.6rem, 9vw, 3.4rem);
+}

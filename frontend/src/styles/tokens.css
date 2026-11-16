@@ -1,0 +1,145 @@
+/*
+ * FixJá — Design tokens
+ * Paleta derivada do protótipo: marinho (ação principal), laranja (marca/destaque),
+ * superfícies claras com sombra suave. Tema escuro espelha os mesmos papéis.
+ */
+:root {
+  color-scheme: light;
+
+  /* Marca */
+  --navy-950: #0a1430;
+  --navy-900: #0f1b3d;
+  --navy-800: #1a2a55;
+  --navy-700: #26386b;
+  --orange-600: #e14d12;
+  --orange-500: #f25c1f;
+  --orange-400: #ff7a45;
+  --orange-100: #ffece3;
+  --orange-50: #fff6f1;
+
+  /* Papéis semânticos */
+  --color-canvas: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8f9fb;
+  --color-surface-sunken: #eef0f4;
+  --color-text: #0f1b3d;
+  --color-text-2: #4a5572;
+  --color-text-3: #8a93a8;
+  --color-border: #e6e9ef;
+  --color-border-strong: #d3d8e2;
+
+  --color-primary: var(--navy-900);
+  --color-primary-hover: var(--navy-800);
+  --color-on-primary: #ffffff;
+  --color-accent: var(--orange-500);
+  --color-accent-hover: var(--orange-600);
+  --color-accent-soft: var(--orange-100);
+  --color-accent-faint: var(--orange-50);
+  --color-on-accent: #ffffff;
+
+  --color-success: #16a34a;
+  --color-success-soft: #e8f8ee;
+  --color-success-border: #b7e8c8;
+  --color-warning: #c27803;
+  --color-warning-soft: #fff7db;
+  --color-warning-border: #f7dd8b;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fdecec;
+  --color-danger-border: #f6c3c3;
+  --color-neutral: #6b7489;
+  --color-neutral-soft: #f1f3f6;
+  --color-neutral-border: #dde1e8;
+  --color-info: #2f6bd8;
+  --color-info-soft: #e9f0fd;
+
+  /* Avatares de iniciais */
+  --avatar-blue-bg: #e3ecfb;
+  --avatar-blue-fg: #2c4f8f;
+  --avatar-orange-bg: #ffe6d8;
+  --avatar-orange-fg: #d2541b;
+  --avatar-green-bg: #e2f5e9;
+  --avatar-green-fg: #23744a;
+  --avatar-violet-bg: #ece7fb;
+  --avatar-violet-fg: #5b45a8;
+
+  /* Tipografia */
+  --font-sans: 'Lexend', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text-xs: 0.72rem;
+  --text-sm: 0.82rem;
+  --text-md: 0.93rem;
+  --text-lg: 1.08rem;
+  --text-xl: 1.35rem;
+  --text-2xl: 1.7rem;
+  --text-3xl: 2.1rem;
+
+  /* Forma e espaço */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgb(15 27 61 / 5%);
+  --shadow-md: 0 4px 16px rgb(15 27 61 / 6%), 0 1px 3px rgb(15 27 61 / 4%);
+  --shadow-lg: 0 14px 40px rgb(15 27 61 / 12%);
+  --ring: 0 0 0 3px rgb(242 92 31 / 28%);
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration: 160ms;
+
+  /* Layout */
+  --sidebar-width: 248px;
+  --bottom-nav-height: 68px;
+  --content-max: 1120px;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-canvas: #0a1022;
+  --color-surface: #121a33;
+  --color-surface-2: #172142;
+  --color-surface-sunken: #0d1530;
+  --color-text: #eef1f8;
+  --color-text-2: #b3bbd0;
+  --color-text-3: #7d87a2;
+  --color-border: #232e52;
+  --color-border-strong: #33406a;
+
+  --color-primary: #f25c1f;
+  --color-primary-hover: #ff7a45;
+  --color-on-primary: #ffffff;
+  --color-accent: #ff7a45;
+  --color-accent-hover: #ff9466;
+  --color-accent-soft: rgb(255 122 69 / 16%);
+  --color-accent-faint: rgb(255 122 69 / 8%);
+
+  --color-success: #4ade80;
+  --color-success-soft: rgb(74 222 128 / 12%);
+  --color-success-border: rgb(74 222 128 / 30%);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgb(251 191 36 / 12%);
+  --color-warning-border: rgb(251 191 36 / 30%);
+  --color-danger: #f87171;
+  --color-danger-soft: rgb(248 113 113 / 12%);
+  --color-danger-border: rgb(248 113 113 / 30%);
+  --color-neutral: #a3acc2;
+  --color-neutral-soft: rgb(163 172 194 / 10%);
+  --color-neutral-border: rgb(163 172 194 / 24%);
+  --color-info: #7aa7ff;
+  --color-info-soft: rgb(122 167 255 / 12%);
+
+  --avatar-blue-bg: rgb(122 167 255 / 16%);
+  --avatar-blue-fg: #a9c5ff;
+  --avatar-orange-bg: rgb(255 122 69 / 16%);
+  --avatar-orange-fg: #ffa47f;
+  --avatar-green-bg: rgb(74 222 128 / 14%);
+  --avatar-green-fg: #86e3a9;
+  --avatar-violet-bg: rgb(167 139 250 / 16%);
+  --avatar-violet-fg: #c4b5fd;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-md: 0 6px 18px rgb(0 0 0 / 28%);
+  --shadow-lg: 0 18px 44px rgb(0 0 0 / 45%);
+  --ring: 0 0 0 3px rgb(255 122 69 / 35%);
+}

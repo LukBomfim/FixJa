@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ChartNoAxesCombined, Database, Hash, Waypoints } from 'lucide-react';
+import { ArrowLeft, ChartNoAxesCombined, Database, Hash, ShieldCheck, Waypoints } from 'lucide-react';
 import { api, errorMessage } from '../services/api';
 import type { BenchmarkResult, Contract, DeveloperInfo, GeographicGraphResult } from '../services/api';
 import { LinkedList, Stack } from '../dataStructures';
@@ -16,7 +16,7 @@ const CONTRACT_STATUS_LABELS: Record<Contract['status'], string> = {
   recusado: 'Recusado',
 };
 
-export const DeveloperMode: React.FC = () => {
+export const DeveloperMode: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [tab, setTab] = useState<DevTab>('hash');
   const [info, setInfo] = useState<DeveloperInfo | null>(null);
   const [benchmark, setBenchmark] = useState<BenchmarkResult | null>(null);
@@ -67,16 +67,25 @@ export const DeveloperMode: React.FC = () => {
   };
 
   return (
-    <main className={styles.page}>
+    <div className={`${styles.page} fx-rise`}>
       <header className={styles.header}>
-        <div><p>Área restrita</p><h1>Modo Desenvolvedor</h1><span>Veja como o FixJá organiza e analisa os dados.</span></div>
-        <span className={styles.accessBadge}>Acesso liberado</span>
+        {onBack && (
+          <button type="button" className={styles.back} onClick={onBack} aria-label="Voltar para o perfil">
+            <ArrowLeft size={22} aria-hidden="true" />
+          </button>
+        )}
+        <div className={styles.headerText}>
+          <p className="fx-eyebrow">Área restrita</p>
+          <h1>Modo Desenvolvedor</h1>
+          <span>Veja como o FixJá organiza e analisa os dados.</span>
+        </div>
+        <span className={styles.accessBadge}><ShieldCheck size={14} aria-hidden="true" /> Acesso liberado</span>
       </header>
       <Tabs.Root value={tab} onValueChange={handleTabChange}>
         <Tabs.List className={styles.tabs} aria-label="Seções do Modo Desenvolvedor">
           {tabs.map((item) => <Tabs.Trigger type="button" key={item.id} value={item.id}>{item.icon}{item.label}</Tabs.Trigger>)}
         </Tabs.List>
-      {error && <p className={styles.error} role="alert">{error}</p>}
+      {error && <p className="fx-alert fx-alert--error" role="alert">{error}</p>}
       {loading ? <p className={styles.empty} role="status">Carregando dados e análises...</p> : null}
       <Tabs.Content value="hash">
       {!loading && info && (
@@ -147,7 +156,7 @@ export const DeveloperMode: React.FC = () => {
       )}
       </Tabs.Content>
       </Tabs.Root>
-    </main>
+    </div>
   );
 };
 

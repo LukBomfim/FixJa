@@ -101,11 +101,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
 
   return (
     <fieldset className={styles.locationPicker}>
-      <legend>Localização</legend>
+      <legend className={styles.legend}>Localização</legend>
       <div className={styles.locationFields}>
-        <label>
-          Estado (UF)
+        <label className="fx-field">
+          <span className="fx-label">Estado (UF)</span>
           <select
+            className="fx-input"
             value={value.estado}
             onChange={(event) => update({ estado: event.target.value, cidade: '' })}
             required={showAddress}
@@ -114,12 +115,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
             {STATES.map(([uf, name]) => <option key={uf} value={uf}>{name} ({uf})</option>)}
           </select>
         </label>
-        <label>
-          Cidade
+        <label className="fx-field">
+          <span className="fx-label">Cidade</span>
           {citiesError ? (
-            <input value={value.cidade} onChange={(event) => update({ cidade: event.target.value })} required={showAddress} />
+            <input className="fx-input" value={value.cidade} onChange={(event) => update({ cidade: event.target.value })} required={showAddress} />
           ) : (
             <select
+              className="fx-input"
               value={value.cidade}
               onChange={(event) => update({ cidade: event.target.value })}
               disabled={!value.estado || cities.length === 0}
@@ -132,9 +134,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
           )}
         </label>
         {showAddress && (
-          <label className={styles.fullWidth}>
-            Endereço ou local de atendimento
+          <label className={`fx-field ${styles.fullWidth}`}>
+            <span className="fx-label">Endereço ou local de atendimento</span>
             <input
+              className="fx-input"
               value={value.endereco}
               onChange={(event) => update({ endereco: event.target.value })}
               placeholder="Rua, número, bairro ou referência"
@@ -146,46 +149,47 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
       {citiesError && <p className={styles.hint} role="status">{citiesError}</p>}
 
       <div className={styles.locationActions}>
-        <button type="button" onClick={useDeviceLocation}><LocateFixed size={16} aria-hidden="true" /> Usar localização do dispositivo</button>
-        <a href={searchUrl} target="_blank" rel="noreferrer"><MapPinned size={16} aria-hidden="true" /> Pesquisar no Google Maps</a>
+        <button type="button" className="fx-btn fx-btn--soft fx-btn--sm" onClick={useDeviceLocation}>
+          <LocateFixed size={16} aria-hidden="true" /> Usar minha localização
+        </button>
+        <a className="fx-btn fx-btn--ghost fx-btn--sm" href={searchUrl} target="_blank" rel="noreferrer">
+          <MapPinned size={16} aria-hidden="true" /> Abrir no Google Maps
+        </a>
       </div>
-      <p className={styles.hint}>A busca do mapa abre em outra aba. Informe as coordenadas exatas do ponto escolhido abaixo.</p>
-      <div className={styles.locationFields}>
-        <label>
-          Latitude
-          <input
-            type="number"
-            step="any"
-            min="-90"
-            max="90"
-            value={value.latitude}
-            onChange={(event) => update({ latitude: event.target.value })}
-            required={showAddress}
-          />
-        </label>
-        <label>
-          Longitude
-          <input
-            type="number"
-            step="any"
-            min="-180"
-            max="180"
-            value={value.longitude}
-            onChange={(event) => update({ longitude: event.target.value })}
-            required={showAddress}
-          />
-        </label>
-      </div>
-      <button
-        type="button"
-        className={styles.confirmButton}
-        disabled={!hasCoordinates}
-        onClick={() => { setLocationError(''); setConfirmed(true); onConfirmedChange?.(true); }}
-      >
-        <Check size={16} aria-hidden="true" /> Confirmar localização selecionada
-      </button>
-      {confirmed && <p className={styles.confirmed} role="status"><Check size={15} aria-hidden="true" /> Localização confirmada. Altere as coordenadas para ajustar o ponto.</p>}
-      {locationError && <p className={styles.error} role="alert">{locationError}</p>}
+
+      <details className={styles.coordinates} open={showAddress || undefined}>
+        <summary>Coordenadas do ponto</summary>
+        <p className={styles.hint}>Use sua localização, clique no mapa ou cole as coordenadas encontradas no Google Maps.</p>
+        <div className={styles.locationFields}>
+          <label className="fx-field">
+            <span className="fx-label">Latitude</span>
+            <input
+              className="fx-input"
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              value={value.latitude}
+              onChange={(event) => update({ latitude: event.target.value })}
+              required={showAddress}
+            />
+          </label>
+          <label className="fx-field">
+            <span className="fx-label">Longitude</span>
+            <input
+              className="fx-input"
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              value={value.longitude}
+              onChange={(event) => update({ longitude: event.target.value })}
+              required={showAddress}
+            />
+          </label>
+        </div>
+      </details>
+
       {hasCoordinates && !confirmed && (
         <div className={styles.mapFrame}>
           <MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className={styles.map}>
@@ -194,11 +198,25 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange, onConf
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <CircleMarker center={[latitude, longitude]} radius={10} pathOptions={{ color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.95 }} />
+            <CircleMarker center={[latitude, longitude]} radius={10} pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#f25c1f', fillOpacity: 1 }} />
           </MapContainer>
-          <p className={styles.mapHint}>Clique no mapa para ajustar a posição do marcador.</p>
+          <p className={styles.mapHint}>Toque no mapa para ajustar a posição do marcador.</p>
         </div>
       )}
+
+      {confirmed ? (
+        <p className={styles.confirmed} role="status"><Check size={15} aria-hidden="true" /> Localização confirmada. Altere as coordenadas para ajustar o ponto.</p>
+      ) : (
+        <button
+          type="button"
+          className="fx-btn fx-btn--soft fx-btn--block"
+          disabled={!hasCoordinates}
+          onClick={() => { setLocationError(''); setConfirmed(true); onConfirmedChange?.(true); }}
+        >
+          <Check size={16} aria-hidden="true" /> Confirmar localização
+        </button>
+      )}
+      {locationError && <p className="fx-field-error" role="alert">{locationError}</p>}
     </fieldset>
   );
 };

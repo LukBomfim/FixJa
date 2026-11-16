@@ -37,7 +37,7 @@ export const ProviderMap: React.FC<ProviderMapProps> = ({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <CircleMarker center={[latitude, longitude]} radius={9} pathOptions={{ color: '#b91c1c', fillColor: '#ef4444', fillOpacity: 0.95 }}>
+      <CircleMarker center={[latitude, longitude]} radius={9} pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#0f1b3d', fillOpacity: 1 }}>
         <Popup>Sua localização</Popup>
       </CircleMarker>
       {providers.map(({ prestador, distancia_km }) => {
@@ -48,9 +48,9 @@ export const ProviderMap: React.FC<ProviderMapProps> = ({
             center={[prestador.latitude, prestador.longitude]}
             radius={selected ? 12 : 8}
             pathOptions={{
-              color: selected ? '#7c3aed' : '#1d4ed8',
-              fillColor: selected ? '#a78bfa' : '#3b82f6',
-              fillOpacity: 0.95,
+              color: '#ffffff',
+              fillColor: selected ? '#f25c1f' : '#ff9a6e',
+              fillOpacity: 1,
               weight: selected ? 4 : 2,
             }}
             eventHandlers={{ click: () => onSelect(prestador.id) }}

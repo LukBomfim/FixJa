@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import styles from './cadastro.module.css';
+import { ArrowLeft, BriefcaseBusiness, Eye, EyeOff, UserRound } from 'lucide-react';
+import styles from '../login/Login.module.css';
 import { api, errorMessage, session } from '../../services/api';
 import type { AccountType, Category } from '../../services/api';
+import Logo from '../../components/ui/Logo';
 
 export interface RegistrationDraft {
   username: string;
@@ -13,6 +14,7 @@ export interface RegistrationDraft {
 interface RegisterProps {
   onRegisterSuccess?: (token: string, refreshToken: string, draft: RegistrationDraft) => void;
   onNavigateToLogin?: () => void;
+  initialProvider?: boolean;
 }
 
 interface FormErrors {
@@ -23,17 +25,16 @@ interface FormErrors {
   general?: string;
 }
 
-const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogin }) => {
+const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogin, initialProvider = false }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [isProvider, setIsProvider] = useState(false);
+  const [isProvider, setIsProvider] = useState(initialProvider);
   const [selectedService, setSelectedService] = useState<string>('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState('');
-
 
   // erros por campo específico
   const [errors, setErrors] = useState<FormErrors>({});
@@ -100,162 +101,150 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onNavigateToLogi
   };
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.formSection}>
-        <div className={styles.formContainer}>
-          <div className={styles.brandHeader}>
-            <span className={styles.logoBadge}>FixJá</span>
+    <div className={styles.page}>
+      <div className={`${styles.column} ${styles.columnTop}`}>
+        <div className={styles.registerTop}>
+          <button type="button" className={styles.back} onClick={onNavigateToLogin} aria-label="Voltar para o login">
+            <ArrowLeft size={22} aria-hidden="true" />
+          </button>
+          <div className={styles.registerBrand}>
+            <Logo size="sm" />
+            <h1 className={styles.registerTitle}>Criar conta</h1>
           </div>
-
-          <div className={styles.welcomeText}>
-            <h1 className={styles.title}>Crie sua conta</h1>
-            <p className={styles.subtitle}>
-              Junte-se ao FixJá como cliente ou prestador de serviços.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className={styles.form} noValidate>
-            {confirmationMessage && <p className={styles.successMessage} role="status">{confirmationMessage}</p>}
-            {/* Nome */}
-            <div className={styles.inputField}>
-              <label htmlFor="name" className={styles.label}>Nome Completo</label>
-              <input
-                id="name"
-                type="text"
-                placeholder="Ex: Maria Silva"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
-                }}
-                className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
-              />
-              {errors.name && <span className={styles.errorMessage}>{errors.name}</span>}
-            </div>
-
-            {/* E-mail */}
-            <div className={styles.inputField}>
-              <label htmlFor="reg-email" className={styles.label}>E-mail</label>
-              <input
-                id="reg-email"
-                type="email"
-                placeholder="nome@exemplo.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
-                }}
-                className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-              />
-              {errors.email && <span className={styles.errorMessage}> {errors.email}</span>}
-            </div>
-
-            {/* Senha */}
-            <div className={styles.inputField}>
-              <label htmlFor="reg-password" className={styles.label}>Senha</label>
-              <div className={styles.passwordInput}>
-                <input
-                  id="reg-password"
-                  type={passwordVisible ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-                  }}
-                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                />
-                <button
-                  type="button"
-                  className={styles.passwordToggle}
-                  onClick={() => setPasswordVisible((visible) => !visible)}
-                  aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={passwordVisible}
-                >
-                  {passwordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-                </button>
-              </div>
-              {errors.password && <span className={styles.errorMessage}> {errors.password}</span>}
-            </div>
-
-            {/* Tipo de Conta */}
-            <div className={styles.accountTypeBox}>
-              <label className={styles.accountTypeLabel}>Tipo de Conta</label>
-              <div className={styles.typeSelector}>
-                <button
-                  type="button"
-                  className={`${styles.typeBtn} ${!isProvider ? styles.typeBtnActive : ''}`}
-                  onClick={() => setIsProvider(false)}
-                >
-                  Cliente
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.typeBtn} ${isProvider ? styles.typeBtnActive : ''}`}
-                  onClick={() => setIsProvider(true)}
-                >
-                  Prestador
-                </button>
-              </div>
-            </div>
-
-            {/* Serviços */}
-            {isProvider && (
-              <div className={styles.inputField}>
-                <label htmlFor="service-select" className={styles.label}>
-                  Área Principal de Atuação:
-                </label>
-                <select
-                  id="service-select"
-                  value={selectedService}
-                  onChange={(e) => {
-                    setSelectedService(e.target.value);
-                    if (errors.selectedService) setErrors((prev) => ({ ...prev, selectedService: undefined }));
-                  }}
-                  className={`${styles.input} ${errors.selectedService ? styles.inputError : ''}`}
-                >
-                  <option value="" disabled>
-                    -- Selecione um serviço --
-                  </option>
-                  {categories.map((item) => (
-                    <option key={item.id} value={item.categoria_name}>
-                      {item.categoria_name}
-                    </option>
-                  ))}
-                </select>
-                {errors.selectedService && (
-                  <span className={styles.errorMessage}>{errors.selectedService}</span>
-                )}
-              </div>
-            )}
-
-            {errors.general && <span className={styles.errorMessage}>{errors.general}</span>}
-
-            <button type="submit" disabled={loading} className={styles.submitBtn}>
-              {loading ? 'Cadastrando...' : 'Finalizar Cadastro'}
-            </button>
-          </form>
-
-          <div className={styles.footer}>
-            <span>Já tem uma conta?</span>{' '}
-            <button 
-              type="button" 
-              onClick={onNavigateToLogin} 
-              className={styles.loginBtnLink}
-            >
-              Fazer Login
-            </button>
-          </div>
+          <span />
         </div>
-      </div>
 
-      <div className={styles.bannerSection}>
-        <img 
-          src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=1200&auto=format&fit=crop" 
-          alt="Trabalhador de Serviços FixJá" 
-          className={styles.bannerImage}
-        />
-        <div className={styles.bannerOverlay} />
+        <form onSubmit={handleSubmit} className={`fx-card ${styles.card}`} noValidate>
+          {confirmationMessage && <p className="fx-alert fx-alert--success" role="status">{confirmationMessage}</p>}
+
+          <div className="fx-field">
+            <label htmlFor="name" className="fx-label">Nome</label>
+            <input
+              id="name"
+              type="text"
+              autoComplete="name"
+              placeholder="Ex.: Maria Silva"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+              }}
+              className={`fx-input ${errors.name ? 'fx-input--error' : ''}`}
+              aria-invalid={Boolean(errors.name)}
+            />
+            {errors.name && <span className="fx-field-error">{errors.name}</span>}
+          </div>
+
+          <div className="fx-field">
+            <label htmlFor="reg-email" className="fx-label">E-mail</label>
+            <input
+              id="reg-email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="nome@exemplo.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+              }}
+              className={`fx-input ${errors.email ? 'fx-input--error' : ''}`}
+              aria-invalid={Boolean(errors.email)}
+            />
+            {errors.email && <span className="fx-field-error">{errors.email}</span>}
+          </div>
+
+          <div className="fx-field">
+            <label htmlFor="reg-password" className="fx-label">Senha</label>
+            <div className="fx-password">
+              <input
+                id="reg-password"
+                type={passwordVisible ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
+                className={`fx-input ${errors.password ? 'fx-input--error' : ''}`}
+                aria-invalid={Boolean(errors.password)}
+              />
+              <button
+                type="button"
+                className="fx-password__toggle"
+                onClick={() => setPasswordVisible((visible) => !visible)}
+                aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={passwordVisible}
+              >
+                {passwordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
+            {errors.password && <span className="fx-field-error">{errors.password}</span>}
+          </div>
+
+          <div className="fx-field" role="radiogroup" aria-labelledby="account-type-label">
+            <span id="account-type-label" className="fx-label">Tipo de conta</span>
+            <div className={styles.typeSelector}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!isProvider}
+                className={`${styles.typeOption} ${!isProvider ? styles.typeOptionActive : ''}`}
+                onClick={() => setIsProvider(false)}
+              >
+                <UserRound size={20} aria-hidden="true" />
+                <strong>Cliente</strong>
+                <small>Quero contratar</small>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={isProvider}
+                className={`${styles.typeOption} ${isProvider ? styles.typeOptionActive : ''}`}
+                onClick={() => setIsProvider(true)}
+              >
+                <BriefcaseBusiness size={20} aria-hidden="true" />
+                <strong>Prestador</strong>
+                <small>Quero oferecer serviços</small>
+              </button>
+            </div>
+          </div>
+
+          {isProvider && (
+            <div className={`fx-field ${styles.reveal}`}>
+              <label htmlFor="service-select" className="fx-label">Área principal de atuação</label>
+              <select
+                id="service-select"
+                value={selectedService}
+                onChange={(e) => {
+                  setSelectedService(e.target.value);
+                  if (errors.selectedService) setErrors((prev) => ({ ...prev, selectedService: undefined }));
+                }}
+                className={`fx-input ${errors.selectedService ? 'fx-input--error' : ''}`}
+              >
+                <option value="" disabled>Selecione um serviço</option>
+                {categories.map((item) => (
+                  <option key={item.id} value={item.categoria_name}>
+                    {item.categoria_name}
+                  </option>
+                ))}
+              </select>
+              {errors.selectedService && <span className="fx-field-error">{errors.selectedService}</span>}
+            </div>
+          )}
+
+          {errors.general && <p className="fx-alert fx-alert--error" role="alert">{errors.general}</p>}
+
+          <button type="submit" disabled={loading} className="fx-btn fx-btn--primary fx-btn--block fx-btn--lg">
+            {loading ? 'Criando conta...' : 'Criar conta'}
+          </button>
+
+          <p className={styles.switchLine}>
+            Já tem uma conta?{' '}
+            <button type="button" onClick={onNavigateToLogin} className="fx-link">Entrar</button>
+          </p>
+        </form>
       </div>
     </div>
   );

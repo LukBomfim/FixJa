@@ -3,10 +3,12 @@ import { Eye, EyeOff } from 'lucide-react';
 import styles from './Login.module.css';
 import { ApiError, api, errorMessage, session } from '../../services/api';
 import type { UserProfile } from '../../services/api';
+import Logo from '../../components/ui/Logo';
 
 interface LoginProps {
   onLoginSuccess?: (profile: UserProfile | null) => void;
   onNavigateToRegister?: () => void;
+  onNavigateToProviderRegister?: () => void;
 }
 
 interface FormErrors {
@@ -15,7 +17,7 @@ interface FormErrors {
   general?: string;
 }
 
-const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) => {
+const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister, onNavigateToProviderRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -64,94 +66,86 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigateToRegister }) =
   };
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.formSection}>
-        <div className={styles.formContainer}>
-          <div className={styles.brandHeader}>
-            <span className={styles.logoBadge}>FixJá</span>
+    <div className={styles.page}>
+      <div className={styles.column}>
+        <header className={styles.hero}>
+          <Logo size="lg" />
+          <p className={styles.tagline}>
+            Contrate profissionais autônomos<br />de confiança, rápido e sem complicação.
+          </p>
+        </header>
+
+        <form onSubmit={handleSubmit} className={`fx-card ${styles.card}`} noValidate>
+          <div className="fx-field">
+            <label htmlFor="login-email" className="fx-label">E-mail</label>
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="nome@exemplo.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+              }}
+              className={`fx-input ${errors.email ? 'fx-input--error' : ''}`}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'login-email-error' : undefined}
+            />
+            {errors.email && <span id="login-email-error" className="fx-field-error">{errors.email}</span>}
           </div>
 
-          <div className={styles.welcomeText}>
-            <h1 className={styles.title}>Acesse sua conta</h1>
-            <p className={styles.subtitle}>
-              Bem-vindo de volta!
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className={styles.form} noValidate>
-            {/* E-mail */}
-            <div className={styles.inputField}>
-              <label htmlFor="login-email" className={styles.label}>E-mail</label>
+          <div className="fx-field">
+            <label htmlFor="login-password" className="fx-label">Senha</label>
+            <div className="fx-password">
               <input
-                id="login-email"
-                type="email"
-                placeholder="nome@exemplo.com"
-                value={email}
+                id="login-password"
+                type={passwordVisible ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="Digite sua senha"
+                value={password}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
                 }}
-                className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                className={`fx-input ${errors.password ? 'fx-input--error' : ''}`}
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={errors.password ? 'login-password-error' : undefined}
               />
-              {errors.email && <span className={styles.errorMessage}> {errors.email}</span>}
+              <button
+                type="button"
+                className="fx-password__toggle"
+                onClick={() => setPasswordVisible((visible) => !visible)}
+                aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={passwordVisible}
+              >
+                {passwordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
             </div>
-
-            {/* Senha */}
-            <div className={styles.inputField}>
-              <label htmlFor="login-password" className={styles.label}>Senha</label>
-              <div className={styles.passwordInput}>
-                <input
-                  id="login-password"
-                  type={passwordVisible ? 'text' : 'password'}
-                  placeholder="Digite sua senha"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-                  }}
-                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                />
-                <button
-                  type="button"
-                  className={styles.passwordToggle}
-                  onClick={() => setPasswordVisible((visible) => !visible)}
-                  aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={passwordVisible}
-                >
-                  {passwordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-                </button>
-              </div>
-              {errors.password && <span className={styles.errorMessage}> {errors.password}</span>}
-            </div>
-
-            {errors.general && <span className={styles.errorMessage}> {errors.general}</span>}
-
-            <button type="submit" disabled={loading} className={styles.submitBtn}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
-
-          <div className={styles.footer}>
-            <span>Ainda não tem uma conta?</span>
-            <button 
-              type="button" 
-              onClick={onNavigateToRegister} 
-              className={styles.switchBtnLink}
-            >
-              Cadastre-se
-            </button>
+            {errors.password && <span id="login-password-error" className="fx-field-error">{errors.password}</span>}
           </div>
-        </div>
+
+          {errors.general && <p className="fx-alert fx-alert--error" role="alert">{errors.general}</p>}
+
+          <button type="submit" disabled={loading} className="fx-btn fx-btn--primary fx-btn--block fx-btn--lg">
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+
+          <p className={styles.switchLine}>
+            Ainda não tem conta?{' '}
+            <button type="button" onClick={onNavigateToRegister} className="fx-link">Criar conta</button>
+          </p>
+        </form>
       </div>
 
-      <div className={styles.bannerSection}>
-        <img 
-          src="https://static.portaldaindustria.com.br/portaldaindustria/noticias/media/imagem_plugin/shutterstock_ykVKVdD.jpg" 
-          alt="Serviços FixJá" 
-          className={styles.bannerImage}
-        />
-        <div className={styles.bannerOverlay} />
-      </div>
+      <footer className={styles.footer}>
+        <span>Sou prestador de serviço</span>
+        <span aria-hidden="true">·</span>
+        <button type="button" className={styles.footerLink} onClick={onNavigateToProviderRegister || onNavigateToRegister}>
+          Quero me cadastrar
+        </button>
+      </footer>
     </div>
   );
 };

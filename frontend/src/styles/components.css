@@ -1,0 +1,376 @@
+/*
+ * FixJá — classes globais reutilizáveis (prefixo fx-)
+ * Usadas por todas as telas para manter botões, campos e cards consistentes.
+ */
+
+/* ---------- Botões ---------- */
+.fx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.65rem 1.15rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--duration) ease, border-color var(--duration) ease,
+    color var(--duration) ease, transform var(--duration) var(--ease), box-shadow var(--duration) ease;
+}
+
+.fx-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.fx-btn:disabled {
+  opacity: 0.55;
+}
+
+.fx-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.fx-btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.fx-btn--accent {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.fx-btn--accent:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.fx-btn--outline {
+  border-color: var(--color-text);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.fx-btn--outline:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.fx-btn--soft {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.fx-btn--soft:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-faint);
+  color: var(--color-accent);
+}
+
+.fx-btn--danger {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.fx-btn--danger:hover:not(:disabled) {
+  border-color: var(--color-danger);
+}
+
+.fx-btn--ghost {
+  background: transparent;
+  color: var(--color-text-2);
+}
+
+.fx-btn--ghost:hover:not(:disabled) {
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+}
+
+.fx-btn--block {
+  width: 100%;
+}
+
+.fx-btn--lg {
+  min-height: 52px;
+  font-size: var(--text-lg);
+}
+
+.fx-btn--sm {
+  min-height: 36px;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.fx-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--duration) ease, color var(--duration) ease;
+}
+
+.fx-icon-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.fx-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.fx-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Campos ---------- */
+.fx-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fx-label {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.fx-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  transition: border-color var(--duration) ease, box-shadow var(--duration) ease;
+}
+
+.fx-input::placeholder {
+  color: var(--color-text-3);
+}
+
+.fx-input:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+}
+
+.fx-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.fx-input:disabled {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-3);
+}
+
+.fx-input--error {
+  border-color: var(--color-danger);
+}
+
+textarea.fx-input {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+select.fx-input {
+  appearance: none;
+  padding-right: 2.4rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a93a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+}
+
+.fx-field-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+
+.fx-password {
+  position: relative;
+}
+
+.fx-password .fx-input {
+  padding-right: 3rem;
+}
+
+.fx-password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-3);
+  transform: translateY(-50%);
+}
+
+.fx-password__toggle:hover {
+  color: var(--color-text);
+}
+
+/* ---------- Cards e seções ---------- */
+.fx-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.fx-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.fx-section-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.fx-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.fx-section-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Avisos ---------- */
+.fx-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.fx-alert--error {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.fx-alert--success {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.fx-alert--warning {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.fx-alert--info {
+  border-color: var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+}
+
+/* ---------- Texto ---------- */
+.fx-muted {
+  color: var(--color-text-2);
+}
+
+.fx-faint {
+  color: var(--color-text-3);
+}
+
+.fx-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.fx-eyebrow::before {
+  content: '';
+  width: 3px;
+  height: 1em;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+.fx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Animações ---------- */
+@keyframes fx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fx-rise {
+  animation: fx-rise 320ms var(--ease) both;
+}
+
+.fx-stagger > * {
+  animation: fx-rise 320ms var(--ease) both;
+}
+
+.fx-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.fx-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.fx-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.fx-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.fx-stagger > *:nth-child(n + 6) { animation-delay: 200ms; }
